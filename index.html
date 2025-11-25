@@ -3,119 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎬 CineFilmes</title>
-    <!-- Incluindo Tailwind CSS -->
+    <title>CineCorp - Streaming Corporativo</title>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Configuração de fontes e cores do Tailwind -->
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0d1117; /* Fundo escuro */
-            color: #c9d1d9; /* Texto claro */
-        }
-        /* Destaque da cor principal (Laranja) */
-        .text-accent { color: #f97316; /* Tailwind orange-500 */ } 
-        .border-accent { border-color: #f97316; }
-        .ring-accent { --tw-ring-color: #f97316; }
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 
-        .movie-card {
-            transition: transform 0.2s, box-shadow 0.2s;
-            cursor: pointer;
+    <style>
+        /* Animações e Utilitários Customizados */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .movie-card:hover {
-            transform: translateY(-5px);
-            /* Sombra Laranja para destaque */
-            box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.2), 0 4px 6px -2px rgba(249, 115, 22, 0.1);
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
         }
-        /* Cor de Ação Primária (Laranja/Vermelho forte) */
-        .btn-primary {
-            background-color: #ea580c; /* Tailwind orange-600 */
+        /* Esconder scrollbar mas manter funcionalidade */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
         }
-        .btn-primary:hover {
-            background-color: #f97316; /* Tailwind orange-500 */
-        }
-        .btn-danger {
-            background-color: #b91c1c; /* Vermelho padrão para exclusão */
-        }
-        .btn-danger:hover {
-            background-color: #dc2626;
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
     </style>
 </head>
-<body class="min-h-screen p-4 sm:p-8">
+<body class="bg-slate-900 text-slate-100 font-sans selection:bg-red-600 selection:text-white min-h-screen flex flex-col">
 
-    <div id="loading" class="text-center p-8">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto"></div>
-        <p class="mt-4 text-accent">Carregando e autenticando...</p>
-    </div>
-
-    <div id="app" class="max-w-4xl mx-auto hidden">
-        <header class="mb-8 border-b border-gray-700 pb-4 flex flex-col sm:flex-row justify-between items-center">
-            <!-- Novo nome do site e ID para o clique secreto -->
-            <h1 id="site-title" class="text-3xl font-bold text-accent mb-4 sm:mb-0 cursor-pointer select-none">CineFilmes 🍿</h1>
-            <div class="flex space-x-4">
-                <button id="btn-view-user" class="py-2 px-4 rounded-lg font-semibold bg-gray-800 ring-2 ring-accent transition">
-                    Ver Filmes
-                </button>
-                <button id="btn-view-admin" class="py-2 px-4 rounded-lg font-semibold bg-gray-700 hover:bg-gray-600 transition hidden">
-                    Admin Login
-                </button>
-                <!-- Botão de Logout para o Admin -->
-                <button id="btn-admin-logout" class="py-2 px-4 rounded-lg font-semibold bg-red-800 hover:bg-red-700 transition hidden">
-                    Sair (Admin)
-                </button>
-            </div>
-        </header>
-
-        <!-- Container principal de visualização -->
-        <main id="content-container">
-            <!-- O conteúdo será injetado aqui pelo JavaScript -->
-        </main>
-
-        <!-- Div de informações de autenticação (OCULTADA) -->
-        <div id="auth-info" class="mt-8 text-xs text-gray-500 border-t border-gray-800 pt-4 hidden"> 
-            <!-- Informações de autenticação e App ID -->
-        </div>
-
-    </div>
-
-    <!-- Modals -->
-    <div id="modal-container" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center p-4 z-50">
-        <div id="modal-content" class="bg-gray-800 p-6 rounded-xl shadow-2xl w-full max-w-5xl transform transition-all"> 
-            <h3 id="modal-title" class="text-2xl font-bold mb-4 text-accent"></h3>
-            <div id="modal-body" class="mb-6"></div>
-            <div id="modal-iframe-container" class="aspect-video w-full mb-4 hidden">
-                <!-- O iframe será injetado aqui -->
-            </div>
-            <button id="modal-close" class="w-full py-3 rounded-lg font-semibold bg-red-600 hover:bg-red-700 transition">
-                Fechar
-            </button>
+    <!-- Container Principal da Aplicação -->
+    <div id="app" class="flex-grow">
+        <!-- O conteúdo será injetado aqui via JavaScript -->
+        <div class="h-screen w-full flex items-center justify-center text-slate-500">
+            Carregando Sistema CineCorp...
         </div>
     </div>
 
-    <!-- Imports do Firebase SDK -->
+    <!-- Firebase e Lógica da Aplicação -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { 
-            getAuth, 
-            signInAnonymously, 
-            signInWithCustomToken, 
-            onAuthStateChanged
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { 
-            getFirestore, 
-            collection, 
-            addDoc, 
-            onSnapshot, 
-            query, 
-            setLogLevel,
-            deleteDoc, 
-            doc 
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-        // Configurações e Globais do Canvas (MANDATÓRIO)
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-movie-app';
+        // --- Configuração Global ---
+        // Configuração fornecida pelo usuário
         const firebaseConfig = {
             apiKey: "AIzaSyDB73S-zwyDZUbLZdvueVVPEC67euQ-5HY",
             authDomain: "eprojectsnormas-73e94.firebaseapp.com",
@@ -125,544 +57,717 @@
             appId: "1:953429912621:web:191774477ed076615c9ca4",
             measurementId: "G-1EMB2W7P6E"
         };
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-        // Credenciais Admin Hardcoded (Conforme solicitado: Admin / Admin)
-        const ADMIN_USERNAME_MOCK = "Admin"; 
-        const ADMIN_PASSWORD_MOCK = "Admin"; 
-        const ADMIN_CLICK_THRESHOLD = 5;
-        let adminClickCount = 0;
-        let lastClickTime = 0;
-
-
-        // Inicialização do Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-
-        setLogLevel('Debug');
-
-        let isAuthReady = false;
-        let currentUserId = null;
-        let currentView = 'user'; 
-        let isAdmin = false; // Estado para controlar o acesso de admin
-        let allMovies = []; // Armazena todos os filmes para a funcionalidade de filtro
-
-        // O caminho para a coleção de filmes. Usa o App ID para garantir que os dados sejam únicos e persistentes.
-        const movieCollectionPath = `/artifacts/${appId}/public/data/movies`;
-
-        // Elementos DOM
-        const appContainer = document.getElementById('app');
-        const loadingScreen = document.getElementById('loading');
-        const contentContainer = document.getElementById('content-container');
-        const authInfo = document.getElementById('auth-info');
-        const btnViewUser = document.getElementById('btn-view-user');
-        const btnViewAdmin = document.getElementById('btn-view-admin');
-        const btnAdminLogout = document.getElementById('btn-admin-logout');
-        const siteTitle = document.getElementById('site-title'); // Referência ao título
-        const modalContainer = document.getElementById('modal-container');
-        const modalTitle = document.getElementById('modal-title');
-        const modalBody = document.getElementById('modal-body');
-        const modalIframeContainer = document.getElementById('modal-iframe-container');
-        const modalClose = document.getElementById('modal-close');
-        const modalContent = document.getElementById('modal-content');
-
-
-        // --- Funções de Autenticação e Inicialização ---
-
-        async function authenticateAndInitialize() {
-            let signInSuccessful = false;
-            
-            if (initialAuthToken) {
-                try {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                    signInSuccessful = true;
-                } catch (error) {
-                    console.warn("Falha na autenticação com token personalizado. Tentando login anônimo.", error);
-                }
-            }
-            
-            if (!signInSuccessful) {
-                try {
-                    await signInAnonymously(auth);
-                } catch (error) {
-                    console.error("Erro fatal: Falha na autenticação anônima.", error);
-                    authInfo.innerHTML = `<p class="text-red-400">Erro fatal de autenticação: ${error.message}</p>`;
-                }
-            }
-        }
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUserId = user.uid;
-                authInfo.innerHTML = `
-                    <p>App ID: <span class="font-mono text-gray-400">${appId}</span></p>
-                    <p>User ID: <span class="font-mono text-gray-400">${currentUserId}</span></p>
-                    <p class="mt-1 ${isAdmin ? 'text-green-400' : 'text-yellow-400'}">Status Admin: ${isAdmin ? 'ATIVO (Local)' : 'Inativo (Usuário Comum)'}</p>
-                `;
-            } else {
-                currentUserId = null;
-                isAdmin = false;
-                authInfo.innerHTML = `<p class="text-yellow-400">Usuário deslogado/anônimo.</p>`;
-            }
-            isAuthReady = true;
-            loadingScreen.classList.add('hidden');
-            appContainer.classList.remove('hidden');
-            renderView(); 
-            if (user) {
-                setupRealtimeListener();
-            }
-        });
-
-        // --- Lógica de Filtro ---
-
-        /**
-         * Filtra os filmes com base no termo de busca.
-         * @param {string} searchTerm Termo de busca.
-         */
-        function filterMovies(searchTerm) {
-            const term = searchTerm.toLowerCase();
-            const filteredMovies = allMovies.filter(movie => 
-                movie.name.toLowerCase().includes(term) ||
-                movie.rating.toLowerCase().includes(term) ||
-                movie.duration.toLowerCase().includes(term) 
-            );
-            renderMovieList(filteredMovies);
-        }
         
-        // --- Funções do Admin ---
-
-        /**
-         * Tenta logar o usuário como Admin usando credenciais hardcoded.
-         */
-        async function handleAdminLogin(e) {
-            e.preventDefault();
-            const form = e.target;
-            const username = form.admin_email.value.trim();
-            const password = form.admin_password.value.trim();
-            const loginMessage = document.getElementById('login-message');
-            loginMessage.textContent = 'Verificando...';
-            loginMessage.classList.remove('text-red-400');
-            loginMessage.classList.add('text-accent');
-
-            // --- Verificação Hardcoded ---
-            if (username === ADMIN_USERNAME_MOCK && password === ADMIN_PASSWORD_MOCK) {
-                isAdmin = true; 
-                closeModal();
-                showCustomAlert('Sucesso no Login', `Bem-vindo, administrador!`, true);
-                currentView = 'admin';
-                renderView();
-            } else {
-                loginMessage.textContent = 'Credenciais incorretas. Tente novamente.';
-                loginMessage.classList.remove('text-accent');
-                loginMessage.classList.add('text-red-400');
-            }
-        }
+        // ID para separar dados neste demo, mas usando seu projeto real
+        const appId = 'cine-corp-production-v1';
         
-        /**
-         * Encerra a sessão de administrador localmente.
-         */
-        function handleAdminLogout() {
-            isAdmin = false;
-            currentView = 'user';
-            renderView();
-            showCustomAlert('Sessão Encerrada', 'Você saiu da área de administração.', true);
-        }
+        // SENHA DO PAINEL ADMIN
+        const ADMIN_PASSWORD = "admin123";
 
+        // API KEY do Gemini (Injetada pelo ambiente)
+        const apiKey = "";
+        
+        let db, auth, user;
+        // Agora sempre assumimos que está configurado pois os dados foram hardcoded
+        const isFirebaseConfigured = true;
 
-        /**
-         * Remove um filme do Firestore.
-         * @param {string} movieId ID do documento do filme.
-         */
-        window.deleteMovie = async (movieId) => {
-            if (!isAdmin) {
-                showCustomAlert('Acesso Negado', 'Você precisa ser um administrador para excluir filmes.', false);
-                return;
+        // --- Estado da Aplicação ---
+        const state = {
+            user: null,
+            isAdmin: false,
+            showAuthModal: false, // Novo estado para controlar o modal de senha
+            authError: '', // Estado para mensagem de erro de senha
+            movies: [],
+            view: 'catalog', // catalog, player, admin
+            selectedMovie: null,
+            searchTerm: '',
+            form: {
+                title: '',
+                genre: '',
+                rating: '',
+                duration: '',
+                desc: '',
+                url: '',
+                isGenerating: false,
+                isSaving: false
             }
-
-            // Confirmação personalizada (simulando um confirm)
-            modalTitle.textContent = "Confirmar Exclusão";
-            modalBody.innerHTML = `
-                <p class="text-lg text-red-300">Tem certeza que deseja excluir este filme permanentemente?</p>
-                <div class="mt-4 flex justify-end space-x-3">
-                    <button id="btn-cancel-delete" class="py-2 px-4 rounded-lg font-semibold bg-gray-600 hover:bg-gray-700 transition">Cancelar</button>
-                    <button id="btn-confirm-delete" class="py-2 px-4 rounded-lg font-semibold btn-danger transition">Excluir</button>
-                </div>
-            `;
-            modalIframeContainer.classList.add('hidden');
-            modalContainer.classList.remove('hidden');
-            modalContainer.classList.add('flex');
-            modalClose.classList.add('hidden'); // Esconde o botão fechar padrão
-
-            document.getElementById('btn-cancel-delete').onclick = closeModal;
-            document.getElementById('btn-confirm-delete').onclick = async () => {
-                closeModal();
-                try {
-                    const movieDocRef = doc(db, movieCollectionPath, movieId);
-                    await deleteDoc(movieDocRef);
-                    showCustomAlert('Sucesso!', 'O filme foi excluído com sucesso.', true);
-                } catch (error) {
-                    console.error("Erro ao excluir filme: ", error);
-                    showCustomAlert('Erro de Exclusão', `Não foi possível excluir o filme. Detalhes: ${error.message}`, false);
-                }
-                modalClose.classList.remove('hidden');
-            };
         };
 
-        // --- Funções do Firestore (Admin/User) ---
-
-        /**
-         * Adiciona um novo filme ao Firestore.
-         */
-        async function createMovie(e) {
-            e.preventDefault();
-            const form = e.target;
-            const name = form.nome.value.trim();
-            const rating = form.classificacao.value.trim();
-            const duration = form.duracao.value.trim();
-            const link = form.link.value.trim();
-
-            if (!name || !rating || !duration || !link) {
-                showCustomAlert('Erro de Cadastro', 'Por favor, preencha todos os campos.', false);
+        // --- Inicialização do Firebase ---
+        async function initFirebase() {
+            if (!isFirebaseConfigured) {
+                console.warn("Firebase config not found. Running in UI-only mode.");
+                renderApp();
                 return;
             }
 
-            if (!link.includes('drive.google.com/file/d/')) {
-                showCustomAlert('Erro de Link', 'O link deve ser um link de compartilhamento do Google Drive (ex: "drive.google.com/file/d/...").', false);
-                return;
-            }
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
 
-            let fileId = '';
+            // Auth Listener
+            onAuthStateChanged(auth, (u) => {
+                state.user = u;
+                if (u) subscribeToMovies();
+                renderApp();
+            });
+
+            // Login
             try {
-                const url = new URL(link);
-                if (url.pathname.includes('/file/d/')) {
-                    const parts = url.pathname.split('/file/d/');
-                    if (parts.length > 1) {
-                        fileId = parts[1].split('/')[0];
-                    }
-                }
-            } catch(e) {
-                console.error("Erro ao processar URL:", e);
-                showCustomAlert('Aviso de Link', 'Não foi possível extrair o ID do arquivo. Verifique se o link de compartilhamento do Google Drive está correto.', false);
-            }
-
-            const movieData = {
-                name: name,
-                rating: rating,
-                duration: duration,
-                originalLink: link, 
-                embedId: fileId, 
-                createdAt: new Date().toISOString(),
-                createdBy: currentUserId
-            };
-
-            try {
-                const moviesRef = collection(db, movieCollectionPath);
-                await addDoc(moviesRef, movieData);
-                showCustomAlert('Sucesso!', `O filme "${name}" foi adicionado com sucesso.`, true);
-                form.reset();
+                // CORREÇÃO: Usar signInAnonymously diretamente.
+                await signInAnonymously(auth);
+                console.log("Autenticado anonimamente no projeto customizado.");
             } catch (error) {
-                console.error("Erro ao adicionar filme: ", error);
-                showCustomAlert('Erro no Firebase', `Não foi possível adicionar o filme. Detalhes: ${error.message}`, false);
+                console.error("Erro de autenticação:", error);
             }
         }
 
+        function subscribeToMovies() {
+            if (!db || !state.user) return;
+            
+            const moviesRef = collection(db, 'artifacts', appId, 'public', 'data', 'movies');
+            const q = query(moviesRef); // Ordenação feita no cliente para evitar erros de índice composto
 
-        let unsubscribe = null;
+            onSnapshot(q, (snapshot) => {
+                const loadedMovies = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
 
-        function setupRealtimeListener() {
-            if (unsubscribe) {
-                unsubscribe(); 
-            }
-            if (!isAuthReady || !currentUserId) return; 
-
-            console.log(`[Firestore] Monitorando coleção persistente: ${movieCollectionPath}`); // Confirmação que o caminho é o mesmo
-
-            const moviesQuery = query(collection(db, movieCollectionPath));
-
-            unsubscribe = onSnapshot(moviesQuery, (snapshot) => {
-                const movies = [];
-                snapshot.forEach((doc) => {
-                    movies.push({ id: doc.id, ...doc.data() });
+                // Ordenar por data (mais recente primeiro)
+                loadedMovies.sort((a, b) => {
+                    const tA = a.createdAt?.seconds || 0;
+                    const tB = b.createdAt?.seconds || 0;
+                    return tB - tA;
                 });
-                
-                allMovies = movies; 
-                
-                // Se estiver na visualização de usuário e o campo de busca existir, 
-                // re-aplica o filtro para que a lista filtrada seja atualizada.
-                const searchInput = document.getElementById('search-input');
-                if (currentView === 'user' && searchInput) {
-                     filterMovies(searchInput.value);
-                } else {
-                     renderMovieList(movies); // Renderiza a lista completa ou se estiver na Admin View
-                }
+
+                state.movies = loadedMovies;
+                renderApp();
             }, (error) => {
-                console.error("Erro ao ouvir a coleção de filmes: ", error);
-                if (currentView === 'user') {
-                    contentContainer.innerHTML = `
-                        <div class="p-6 bg-red-900/50 rounded-lg">
-                            <h2 class="text-xl font-semibold text-red-400">Erro de Conexão</h2>
-                            <p class="mt-2">Não foi possível carregar a lista de filmes em tempo real. Por favor, verifique as permissões ou sua conexão.</p>
-                        </div>
-                    `;
-                }
+                console.error("Erro ao ler filmes:", error);
             });
         }
 
-        // --- Funções de Renderização de Views ---
+        // --- Lógica de Negócio (GEMINI AI) ---
 
-        function renderView() {
-            if (!isAuthReady) return; 
+        async function fetchMovieDataFromGemini(title) {
+            const systemPrompt = `Você é um assistente especializado em catalogação de filmes corporativos e entretenimento. 
+            Dado o título de um filme ou treinamento, gere metadados plausíveis em Português do Brasil.
+            Se o título parecer um treinamento (ex: "Vendas 2024"), gere dados sérios. Se parecer filme comercial, gere dados reais ou plausíveis.`;
 
-            // Atualiza o estilo e visibilidade dos botões
-            if (isAdmin) {
-                btnViewAdmin.innerHTML = 'Área Admin (Logado)';
-                btnViewAdmin.classList.remove('bg-gray-700', 'hover:bg-gray-600');
-                btnViewAdmin.classList.add('bg-orange-800', 'ring-2', 'ring-accent');
-                btnAdminLogout.classList.remove('hidden');
-            } else {
-                btnViewAdmin.innerHTML = 'Admin Login';
-                btnViewAdmin.classList.remove('bg-orange-800', 'ring-2', 'ring-accent');
-                btnViewAdmin.classList.add('bg-gray-700', 'hover:bg-gray-600');
-                btnAdminLogout.classList.add('hidden');
-            }
-            
-            if (currentView === 'admin' && isAdmin) {
-                btnViewUser.classList.remove('bg-gray-800', 'ring-2', 'ring-accent');
-                btnViewUser.classList.add('bg-gray-700', 'hover:bg-gray-600');
-                renderAdminForm();
-            } else {
-                currentView = 'user'; 
-                btnViewUser.classList.remove('bg-gray-700', 'hover:bg-gray-600');
-                btnViewUser.classList.add('bg-gray-800', 'ring-2', 'ring-accent');
+            const userPrompt = `Gere os dados para o filme/vídeo com o título: "${title}"`;
+
+            try {
+                const response = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [{ text: userPrompt }]
+                            }],
+                            systemInstruction: {
+                                parts: [{ text: systemPrompt }]
+                            },
+                            generationConfig: {
+                                responseMimeType: "application/json",
+                                responseSchema: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        genre: { type: "STRING", description: "Gênero do filme (ex: Drama, Treinamento, Ação)" },
+                                        rating: { type: "STRING", description: "Classificação indicativa (ex: Livre, 12 anos)" },
+                                        duration: { type: "STRING", description: "Duração estimada (ex: 1h 30min)" },
+                                        description: { type: "STRING", description: "Uma sinopse curta e envolvente de 2 a 3 frases." }
+                                    }
+                                }
+                            }
+                        }),
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(`Gemini API Error: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
                 
-                contentContainer.innerHTML = `
-                    <h2 class="text-2xl font-semibold mb-6 text-accent">Catálogo de Filmes</h2>
+                if (jsonText) {
+                    return JSON.parse(jsonText);
+                }
+                throw new Error("No data returned from Gemini");
+
+            } catch (error) {
+                console.error("Erro na IA:", error);
+                throw error;
+            }
+        }
+
+        function getDriveEmbedLink(url) {
+            let id = null;
+            
+            // Tenta encontrar o ID em diferentes formatos de URL do Google Drive
+            
+            // Padrão 1: .../d/ID_DO_ARQUIVO/...
+            const match1 = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+            if (match1) {
+                id = match1[1];
+            } 
+            // Padrão 2: ...?id=ID_DO_ARQUIVO...
+            else {
+                const match2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+                if (match2) {
+                    id = match2[1];
+                }
+            }
+
+            // Se encontrou um ID, retorna o link de embed (/preview)
+            if (id) {
+                return `https://drive.google.com/file/d/${id}/preview`;
+            }
+            
+            // Se não for drive, retorna original (pode ser youtube/vimeo se o usuário tentar)
+            return url;
+        }
+
+        // --- Ações da UI ---
+
+        window.actions = {
+            setView: (view) => {
+                state.view = view;
+                renderApp();
+            },
+            openAuthModal: () => {
+                if (state.isAdmin) {
+                    // Se já é admin, faz logout
+                    state.isAdmin = false;
+                    state.view = 'catalog';
+                } else {
+                    // Se não é, abre modal
+                    state.showAuthModal = true;
+                    state.authError = '';
+                }
+                renderApp();
+                // Focar no input de senha após renderizar
+                setTimeout(() => document.getElementById('admin-password-input')?.focus(), 50);
+            },
+            closeAuthModal: () => {
+                state.showAuthModal = false;
+                state.authError = '';
+                renderApp();
+            },
+            attemptLogin: (password) => {
+                if (password === ADMIN_PASSWORD) {
+                    state.isAdmin = true;
+                    state.showAuthModal = false;
+                    state.view = 'admin'; // Redireciona direto
+                } else {
+                    state.authError = 'Senha incorreta.';
+                    // Limpa erro após 2s
+                    setTimeout(() => {
+                        state.authError = '';
+                        renderApp();
+                    }, 2000);
+                }
+                renderApp();
+            },
+            updateSearch: (val) => {
+                state.searchTerm = val;
+                renderApp();
+            },
+            openPlayer: (movieId) => {
+                state.selectedMovie = state.movies.find(m => m.id === movieId);
+                state.view = 'player';
+                renderApp();
+            },
+            updateForm: (field, value) => {
+                state.form[field] = value;
+                renderApp(); // Re-render para mostrar valor digitado (estilo React controlado)
+                // Nota: Em apps vanilla maiores, atualizaríamos apenas o DOM do input, mas renderApp() é rápido o suficiente aqui.
+                // Para evitar perda de foco, focamos no elemento após render.
+                setTimeout(() => {
+                   const el = document.querySelector(`[data-field="${field}"]`);
+                   if(el) el.focus(); 
+                }, 0);
+            },
+            generateAI: async () => {
+                if (!state.form.title) {
+                    alert("Digite o nome do filme primeiro.");
+                    return;
+                }
+                state.form.isGenerating = true;
+                renderApp();
+                
+                try {
+                    // Chamada REAL ao Gemini
+                    const data = await fetchMovieDataFromGemini(state.form.title);
                     
-                    <!-- Campo de Busca/Filtro -->
-                    <div class="mb-6">
-                        <input type="text" id="search-input" placeholder="Buscar filmes por nome ou classificação..." 
-                            class="w-full p-3 rounded-lg border border-gray-600 bg-gray-700 text-white focus:ring-accent focus:border-accent">
-                    </div>
+                    state.form.genre = data.genre || "";
+                    state.form.rating = data.rating || "";
+                    state.form.duration = data.duration || "";
+                    state.form.desc = data.description || "";
+                    
+                } catch(e) {
+                    console.error(e);
+                    // Fallback silencioso ou alerta opcional
+                } finally {
+                    state.form.isGenerating = false;
+                    renderApp();
+                }
+            },
+            saveMovie: async () => {
+                if (!state.form.title || !state.form.url) return alert("Título e Link são obrigatórios.");
+                if (!db) return alert("Erro de conexão.");
 
-                    <div id="movie-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <p class="col-span-full text-center text-gray-500">Carregando filmes...</p>
-                    </div>
-                `;
-                document.getElementById('search-input').addEventListener('keyup', (e) => filterMovies(e.target.value));
-                renderMovieList(allMovies); // Renderiza a lista completa ou filtrada
+                state.form.isSaving = true;
+                renderApp();
+
+                try {
+                    const embedUrl = getDriveEmbedLink(state.form.url);
+                    const newMovie = {
+                        title: state.form.title,
+                        genre: state.form.genre || 'Geral',
+                        rating: state.form.rating || 'Livre',
+                        duration: state.form.duration || 'Desconhecida',
+                        description: state.form.desc || 'Sem descrição.',
+                        videoUrl: state.form.url,
+                        embedUrl: embedUrl,
+                        createdAt: serverTimestamp(),
+                        thumbnailUrl: `https://source.unsplash.com/800x450/?cinema,${(state.form.genre || 'movie').split(' ')[0]}`
+                    };
+
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'movies'), newMovie);
+                    
+                    // Reset Form
+                    state.form = { title: '', genre: '', rating: '', duration: '', desc: '', url: '', isGenerating: false, isSaving: false };
+                    alert("Filme cadastrado!");
+                } catch (e) {
+                    console.error(e);
+                    alert("Erro ao salvar.");
+                } finally {
+                    state.form.isSaving = false;
+                    renderApp();
+                }
+            },
+            deleteMovie: async (id) => {
+                if (!confirm("Tem certeza?")) return;
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'movies', id));
+                } catch(e) {
+                    alert("Erro ao deletar.");
+                }
             }
-        }
-
-        function renderAdminForm() {
-            contentContainer.innerHTML = `
-                <h2 class="text-2xl font-semibold mb-6 text-accent">Cadastro de Novo Filme (Admin)</h2>
-                <form id="movie-form" class="bg-gray-800 p-6 rounded-xl shadow-lg space-y-4">
-                    <div>
-                        <label for="nome" class="block text-sm font-medium text-gray-300">Nome do Filme</label>
-                        <input type="text" id="nome" name="nome" required class="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white p-2 focus:ring-accent focus:border-accent">
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label for="classificacao" class="block text-sm font-medium text-gray-300">Classificação Etária</label>
-                            <input type="text" id="classificacao" name="classificacao" required placeholder="Ex: Livre, 12+, 16+" class="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white p-2 focus:ring-accent focus:border-accent">
-                        </div>
-                        <div>
-                            <label for="duracao" class="block text-sm font-medium text-gray-300">Duração (Minutos)</label>
-                            <input type="text" id="duracao" name="duracao" required placeholder="Ex: 120min" class="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white p-2 focus:ring-accent focus:border-accent">
-                        </div>
-                    </div>
-                    <div>
-                        <label for="link" class="block text-sm font-medium text-gray-300">Link do Filme (Google Drive)</label>
-                        <input type="url" id="link" name="link" required placeholder="Cole o link de compartilhamento do Google Drive aqui" class="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white p-2 focus:ring-accent focus:border-accent">
-                        <p class="mt-1 text-xs text-gray-400">Certifique-se que o link de compartilhamento do Google Drive esteja configurado como "Qualquer pessoa com o link pode visualizar".</p>
-                    </div>
-                    <button type="submit" class="w-full py-3 btn-primary rounded-lg font-bold text-white transition">
-                        CADASTRAR FILME
-                    </button>
-                </form>
-            `;
-            document.getElementById('movie-form').addEventListener('submit', createMovie);
-        }
-
-        /**
-         * Renderiza a lista de filmes na tela do usuário.
-         * @param {Array<Object>} movies Lista de objetos de filme.
-         */
-        function renderMovieList(movies) {
-            const movieList = document.getElementById('movie-list');
-            if (!movieList) return;
-
-            if (movies.length === 0) {
-                movieList.innerHTML = `<p class="col-span-full text-center text-gray-500 p-8 border border-gray-700 rounded-lg">Nenhum filme encontrado. Tente um termo de busca diferente ou adicione um filme na Área Admin!</p>`;
-                return;
-            }
-
-            movieList.innerHTML = movies.map(movie => `
-                <div class="movie-card bg-gray-800 p-4 rounded-xl shadow-lg border border-gray-700 flex flex-col justify-between" data-id="${movie.id}" data-embed-id="${movie.embedId}">
-                    <div>
-                        <!-- Icone de Filme (SVG simples) -->
-                        <div class="text-accent mb-3 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
-                            </svg>
-                            <h3 class="text-xl font-bold text-white truncate">${movie.name}</h3>
-                        </div>
-                        
-                        <div class="text-sm mt-2 space-y-1 ml-8">
-                            <p><span class="font-semibold text-accent">Classificação:</span> ${movie.rating}</p>
-                            <p><span class="font-semibold text-accent">Duração:</span> ${movie.duration}</p>
-                        </div>
-                    </div>
-                    <div class="mt-4 flex space-x-2">
-                        <button onclick="watchMovie(this)" class="flex-grow py-2 bg-red-600 hover:bg-red-700 rounded-lg font-semibold transition">
-                            ASSISTIR
-                        </button>
-                        ${isAdmin ? `<button onclick="deleteMovie('${movie.id}')" class="w-1/3 py-2 btn-danger rounded-lg font-semibold transition text-sm">
-                            EXCLUIR
-                        </button>` : ''}
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // --- Funções do Modal e Interação ---
-
-        function showCustomAlert(title, message, isSuccess) {
-            modalTitle.textContent = title;
-            modalBody.innerHTML = `<p class="${isSuccess ? 'text-green-400' : 'text-red-400'}">${message}</p>`;
-            modalIframeContainer.classList.add('hidden');
-            modalContainer.classList.remove('hidden');
-            modalContainer.classList.add('flex');
-            modalClose.textContent = 'Entendi';
-            modalClose.classList.remove('hidden'); 
-            
-            modalContent.classList.remove('max-w-5xl');
-            modalContent.classList.add('max-w-lg');
-        }
-
-        function closeModal() {
-            modalContainer.classList.add('hidden');
-            modalContainer.classList.remove('flex');
-            modalIframeContainer.innerHTML = ''; 
-            modalBody.innerHTML = ''; 
-            modalClose.classList.remove('hidden');
-            
-            // Redefine o tamanho do modal para o padrão (max-w-5xl é apenas para o player)
-            modalContent.classList.remove('max-w-sm', 'max-w-lg');
-            modalContent.classList.add('max-w-5xl');
-        }
-
-        function showLoginModal() {
-            modalTitle.textContent = "Acesso de Administrador";
-            modalBody.innerHTML = `
-                <form id="admin-login-form" class="space-y-4">
-                    <p class="text-sm text-gray-400 mb-4">
-                        <span class="font-bold text-red-400">Login Local:</span> Use as credenciais hardcoded.
-                    </p>
-                    <div>
-                        <label for="admin_email" class="block text-sm font-medium text-gray-300">Usuário</label>
-                        <input type="text" id="admin_email" name="admin_email" required 
-                               class="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white p-2 focus:ring-accent focus:border-accent"
-                               value="" placeholder="${ADMIN_USERNAME_MOCK}">
-                    </div>
-                    <div>
-                        <label for="admin_password" class="block text-sm font-medium text-gray-300">Senha</label>
-                        <input type="password" id="admin_password" name="admin_password" required 
-                               class="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white p-2 focus:ring-accent focus:border-accent"
-                               placeholder="${ADMIN_PASSWORD_MOCK}">
-                    </div>
-                    <p id="login-message" class="text-sm text-red-400 h-4"></p>
-                    <button type="submit" class="w-full py-3 btn-primary rounded-lg font-bold text-white transition">
-                        ENTRAR COMO ADMIN
-                    </button>
-                </form>
-            `;
-            modalClose.textContent = 'Cancelar';
-            modalClose.classList.remove('hidden');
-            modalContainer.classList.remove('hidden');
-            modalContainer.classList.add('flex');
-            
-            modalContent.classList.remove('max-w-5xl');
-            modalContent.classList.add('max-w-sm');
-
-            document.getElementById('admin-login-form').addEventListener('submit', handleAdminLogin);
-        }
-
-        // Função global para ser chamada pelo onclick no HTML
-        window.watchMovie = (button) => {
-            const card = button.closest('.movie-card');
-            const name = card.querySelector('h3').textContent;
-            const embedId = card.dataset.embedId;
-
-            modalTitle.textContent = `Assistir: ${name}`;
-            modalBody.innerHTML = `<p class="text-lg mb-4 text-center text-gray-300">Carregando player...</p>`;
-            modalIframeContainer.classList.remove('hidden');
-            modalClose.textContent = 'Fechar Player';
-
-            let iframeSrc = '';
-            if (embedId) {
-                iframeSrc = `https://drive.google.com/file/d/${embedId}/preview`;
-            } else {
-                iframeSrc = card.dataset.originalLink || '';
-            }
-
-            if (iframeSrc) {
-                modalIframeContainer.innerHTML = `
-                    <iframe src="${iframeSrc}" class="w-full h-full rounded-lg" frameborder="0" allowfullscreen></iframe>
-                `;
-            } else {
-                modalBody.innerHTML = `<p class="text-lg mb-4 text-center text-red-400">Erro: Não foi possível encontrar o link para o filme.</p>`;
-                modalIframeContainer.innerHTML = '';
-            }
-
-            modalContainer.classList.remove('hidden');
-            modalContainer.classList.add('flex');
-
-            modalContent.classList.remove('max-w-sm', 'max-w-lg');
-            modalContent.classList.add('max-w-5xl');
         };
 
-        // --- Event Listeners e Inicialização ---
+        // --- Renderização (HTML Templates) ---
 
-        btnViewUser.addEventListener('click', () => {
-            currentView = 'user';
-            renderView();
-        });
+        function renderNavbar() {
+            return `
+                <nav class="fixed top-0 w-full z-50 bg-gradient-to-b from-black/90 to-transparent px-6 py-4 flex items-center justify-between">
+                    <div class="flex items-center gap-2 cursor-pointer" onclick="actions.setView('catalog')">
+                        <i data-lucide="monitor-play" class="text-red-600 w-8 h-8"></i>
+                        <h1 class="text-2xl font-bold tracking-tighter text-white">CINE<span class="text-red-600">CORP</span></h1>
+                    </div>
 
-        btnViewAdmin.addEventListener('click', () => {
-            if (isAdmin) {
-                currentView = 'admin';
-                renderView();
+                    <div class="flex items-center gap-4">
+                        <button 
+                            onclick="actions.openAuthModal()"
+                            class="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${state.isAdmin ? 'bg-red-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}"
+                        >
+                            <i data-lucide="${state.isAdmin ? 'shield-check' : 'user'}" width="14"></i>
+                            ${state.isAdmin ? 'SAIR DO ADMIN' : 'MODO USUÁRIO'}
+                        </button>
+                        
+                        ${state.isAdmin ? `
+                            <button 
+                                onclick="actions.setView('admin')"
+                                class="bg-white text-black hover:bg-slate-200 px-4 py-2 rounded font-semibold text-sm transition-colors flex items-center gap-2"
+                            >
+                                <i data-lucide="plus" width="18"></i> Adicionar Filme
+                            </button>
+                        ` : ''}
+                    </div>
+                </nav>
+            `;
+        }
+
+        function renderAuthModal() {
+            if (!state.showAuthModal) return '';
+            
+            return `
+                <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in">
+                    <div class="bg-slate-800 p-8 rounded-xl border border-slate-700 shadow-2xl max-w-sm w-full relative">
+                        <button onclick="actions.closeAuthModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white">
+                            <i data-lucide="x" width="20"></i>
+                        </button>
+                        
+                        <div class="text-center mb-6">
+                            <div class="bg-red-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <i data-lucide="lock" class="text-white" width="20"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-white">Acesso Restrito</h3>
+                            <p class="text-slate-400 text-sm mt-1">Digite a senha de administrador.</p>
+                            <p class="text-slate-600 text-xs mt-1">(Dica: admin123)</p>
+                        </div>
+
+                        <input 
+                            id="admin-password-input"
+                            type="password" 
+                            placeholder="Senha" 
+                            class="w-full bg-slate-900 border ${state.authError ? 'border-red-500' : 'border-slate-700'} text-white rounded-lg px-4 py-3 mb-2 focus:border-red-600 outline-none transition-colors"
+                            onkeydown="if(event.key === 'Enter') actions.attemptLogin(this.value)"
+                        />
+                        
+                        ${state.authError ? `<p class="text-red-500 text-xs mb-3 text-center">${state.authError}</p>` : ''}
+
+                        <button 
+                            onclick="actions.attemptLogin(document.getElementById('admin-password-input').value)"
+                            class="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-slate-200 transition-colors mt-2"
+                        >
+                            Entrar
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderCatalog() {
+            const filtered = state.movies.filter(m => 
+                m.title.toLowerCase().includes(state.searchTerm.toLowerCase()) ||
+                m.genre.toLowerCase().includes(state.searchTerm.toLowerCase())
+            );
+
+            let contentHtml = '';
+
+            if (filtered.length === 0) {
+                contentHtml = `
+                    <div class="text-center py-20 text-slate-500">
+                        <i data-lucide="film" class="w-16 h-16 mx-auto mb-4 opacity-20"></i>
+                        <p>Nenhum filme encontrado no catálogo.</p>
+                        ${state.isAdmin ? '<p class="text-sm mt-2">Vá em "Adicionar Filme" para começar.</p>' : ''}
+                    </div>
+                `;
             } else {
-                showLoginModal();
+                contentHtml = `
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        ${filtered.map(movie => `
+                            <div 
+                                onclick="actions.openPlayer('${movie.id}')"
+                                class="group bg-slate-800 rounded-lg overflow-hidden hover:scale-[1.02] transition-transform duration-300 cursor-pointer shadow-lg hover:shadow-red-900/20 border border-slate-700 hover:border-red-600/50"
+                            >
+                                <div class="aspect-video bg-slate-900 relative overflow-hidden">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10"></div>
+                                    <img src="${movie.thumbnailUrl || ''}" onerror="this.src='https://source.unsplash.com/random/800x600/?abstract'" class="w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity"/>
+                                    
+                                    <div class="absolute bottom-3 left-3 z-20">
+                                        <span class="text-xs font-bold bg-red-600 text-white px-2 py-0.5 rounded uppercase tracking-wider mb-1 inline-block">
+                                            ${movie.genre}
+                                        </span>
+                                        <h3 class="font-bold text-lg leading-tight shadow-black drop-shadow-md text-white">${movie.title}</h3>
+                                    </div>
+                                    
+                                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-30 bg-black/40 backdrop-blur-[1px]">
+                                         <div class="bg-red-600 text-white rounded-full p-3 shadow-xl transform scale-75 group-hover:scale-100 transition-transform">
+                                            <i data-lucide="play" fill="currentColor" class="ml-1"></i>
+                                         </div>
+                                    </div>
+                                </div>
+
+                                <div class="p-4">
+                                    <div class="flex justify-between items-center text-xs text-slate-400 mb-3">
+                                        <div class="flex items-center gap-1">
+                                            <i data-lucide="clock" width="12"></i> ${movie.duration}
+                                        </div>
+                                        <div class="flex items-center gap-1 border border-slate-600 px-1.5 rounded text-slate-300">
+                                            ${movie.rating}
+                                        </div>
+                                    </div>
+                                    <p class="text-sm text-slate-400 line-clamp-2 leading-relaxed">
+                                        ${movie.description}
+                                    </p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
             }
-        });
-        
-        btnAdminLogout.addEventListener('click', handleAdminLogout);
 
-        modalClose.addEventListener('click', closeModal);
+            return `
+                <div class="animate-fade-in pt-24 pb-12 px-6 max-w-7xl mx-auto">
+                    <div class="mb-10 flex flex-col md:flex-row justify-between items-end gap-4 border-b border-slate-800 pb-6">
+                        <div>
+                            <h2 class="text-3xl font-bold mb-2 text-white">Catálogo da Empresa</h2>
+                            <p class="text-slate-400">Treinamentos, gravações e entretenimento corporativo.</p>
+                        </div>
+                        <div class="relative w-full md:w-96">
+                            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5"></i>
+                            <input 
+                                type="text" 
+                                placeholder="Buscar filmes, gêneros..." 
+                                class="w-full bg-slate-800 border border-slate-700 text-white focus:border-red-600 rounded-full py-2.5 pl-10 pr-4 outline-none transition-all text-sm"
+                                value="${state.searchTerm}"
+                                oninput="actions.updateSearch(this.value)"
+                            />
+                        </div>
+                    </div>
+                    ${contentHtml}
+                </div>
+            `;
+        }
 
-        // Lógica do clique secreto para o Admin
-        siteTitle.addEventListener('click', () => {
-            const now = Date.now();
-            // Reseta a contagem se o último clique foi há mais de 800ms
-            if (now - lastClickTime > 800) {
-                adminClickCount = 0;
+        function renderAdmin() {
+            return `
+                <div class="pt-24 pb-12 px-6 max-w-7xl mx-auto min-h-screen animate-fade-in">
+                    <div class="max-w-2xl mx-auto">
+                        <button onclick="actions.setView('catalog')" class="mb-6 text-sm text-slate-400 hover:text-white flex items-center gap-1">
+                            &larr; Voltar ao Catálogo
+                        </button>
+                        
+                        <div class="bg-slate-800 rounded-xl p-8 border border-slate-700 shadow-2xl mb-12">
+                            <div class="flex items-center gap-3 mb-6 border-b border-slate-700 pb-4">
+                                <div class="bg-red-600 p-2 rounded-lg">
+                                    <i data-lucide="wand-2" class="text-white"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-2xl font-bold text-white">Cadastrar Filme com IA</h2>
+                                    <p class="text-slate-400 text-sm">Digite o nome e deixe o sistema preencher o resto.</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">Nome do Filme</label>
+                                    <div class="flex gap-2">
+                                        <input 
+                                            data-field="title"
+                                            class="flex-1 bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-3 focus:border-red-600 outline-none transition-colors"
+                                            placeholder="Ex: Treinamento de Vendas 2024"
+                                            value="${state.form.title}"
+                                            oninput="actions.updateForm('title', this.value)"
+                                        />
+                                        <button 
+                                            onclick="actions.generateAI()"
+                                            ${(state.form.isGenerating || !state.form.title) ? 'disabled' : ''}
+                                            class="bg-purple-600 hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 rounded-lg font-medium transition-colors flex items-center gap-2 whitespace-nowrap"
+                                        >
+                                            ${state.form.isGenerating ? '<span class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent inline-block"></span> Gerando...' : '<i data-lucide="wand-2" width="18"></i> Preencher IA'}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-300 mb-2">Gênero</label>
+                                        <input 
+                                            data-field="genre"
+                                            class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-2 focus:border-red-600 outline-none"
+                                            value="${state.form.genre}"
+                                            oninput="actions.updateForm('genre', this.value)"
+                                            placeholder="Autopreenchido..."
+                                        />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-300 mb-2">Classificação</label>
+                                        <input 
+                                            data-field="rating"
+                                            class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-2 focus:border-red-600 outline-none"
+                                            value="${state.form.rating}"
+                                            oninput="actions.updateForm('rating', this.value)"
+                                            placeholder="Autopreenchido..."
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                   <label class="block text-sm font-medium text-slate-300 mb-2">Duração</label>
+                                    <input 
+                                        data-field="duration"
+                                        class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-2 focus:border-red-600 outline-none"
+                                        value="${state.form.duration}"
+                                        oninput="actions.updateForm('duration', this.value)"
+                                        placeholder="Autopreenchido..."
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">Descrição (Sinopse)</label>
+                                    <textarea 
+                                        data-field="desc"
+                                        class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-2 focus:border-red-600 outline-none h-24 resize-none"
+                                        oninput="actions.updateForm('desc', this.value)"
+                                        placeholder="A IA escreverá a sinopse aqui..."
+                                    >${state.form.desc}</textarea>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">Link do Google Drive (Vídeo)</label>
+                                    <input 
+                                        data-field="url"
+                                        class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-3 focus:border-red-600 outline-none font-mono text-sm text-blue-400"
+                                        placeholder="https://drive.google.com/file/d/..."
+                                        value="${state.form.url}"
+                                        oninput="actions.updateForm('url', this.value)"
+                                    />
+                                    <div class="mt-2 p-3 bg-yellow-900/30 border border-yellow-700/50 rounded text-xs text-yellow-200 flex items-start gap-2">
+                                        <i data-lucide="alert-triangle" width="16" class="mt-0.5 flex-shrink-0"></i>
+                                        <div>
+                                            <strong>Importante:</strong> No Google Drive, clique nos 3 pontos do arquivo > Compartilhar > Acesso Geral e mude para <u>"Qualquer pessoa com o link"</u>. Se estiver como "Restrito", o vídeo não vai rodar.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="pt-4 border-t border-slate-700 flex justify-end">
+                                    <button 
+                                        onclick="actions.saveMovie()"
+                                        ${state.form.isSaving ? 'disabled' : ''}
+                                        class="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-bold transition-all shadow-lg shadow-red-900/20 flex items-center gap-2"
+                                    >
+                                        ${state.form.isSaving ? 'Salvando...' : 'Salvar Filme no Catálogo'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h3 class="text-xl font-bold mb-4 text-slate-400">Gerenciar Filmes Existentes</h3>
+                        <div class="bg-slate-800 rounded-lg border border-slate-700 divide-y divide-slate-700">
+                            ${state.movies.length === 0 ? '<div class="p-4 text-slate-500 text-center text-sm">Nenhum filme cadastrado.</div>' : ''}
+                            ${state.movies.map(m => `
+                                <div class="p-4 flex justify-between items-center hover:bg-slate-700/50">
+                                    <div>
+                                        <span class="font-bold block text-white">${m.title}</span>
+                                        <span class="text-xs text-slate-500">${m.genre} • ${m.duration}</span>
+                                    </div>
+                                    <button 
+                                        onclick="actions.deleteMovie('${m.id}')"
+                                        class="text-red-500 hover:text-red-400 hover:bg-red-900/20 p-2 rounded transition-colors"
+                                        title="Excluir Filme"
+                                    >
+                                        <i data-lucide="trash-2" width="18"></i>
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderPlayer() {
+            const m = state.selectedMovie;
+            if (!m) return renderCatalog();
+
+            const recommendations = state.movies.filter(mv => mv.id !== m.id).slice(0, 4);
+
+            return `
+                <div class="pt-24 pb-12 px-6 max-w-7xl mx-auto min-h-screen animate-fade-in">
+                    <button onclick="actions.setView('catalog')" class="mb-6 text-sm text-slate-400 hover:text-white flex items-center gap-1">
+                        &larr; Voltar ao Catálogo
+                    </button>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <!-- Player e Info -->
+                        <div class="lg:col-span-2 space-y-6">
+                            <div class="aspect-video bg-black rounded-xl overflow-hidden shadow-2xl relative group border border-slate-800">
+                                <iframe 
+                                    src="${m.embedUrl}" 
+                                    class="w-full h-full" 
+                                    frameBorder="0" 
+                                    allow="autoplay; fullscreen" 
+                                    allowFullScreen
+                                ></iframe>
+                                <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <a 
+                                        href="${m.videoUrl}" 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        class="bg-slate-900/80 hover:bg-black text-white px-3 py-1 rounded text-xs backdrop-blur-sm border border-slate-700 flex items-center gap-1"
+                                    >
+                                        Abrir no Drive <i data-lucide="log-out" width="12"></i>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h1 class="text-4xl font-bold mb-2 text-white">${m.title}</h1>
+                                <div class="flex flex-wrap gap-3 text-sm mb-6">
+                                    <span class="text-green-400 font-bold">${m.rating}</span>
+                                    <span class="text-slate-400">${m.duration}</span>
+                                    <span class="text-slate-400">${m.genre}</span>
+                                </div>
+                                
+                                <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700">
+                                    <h3 class="text-lg font-bold mb-2 flex items-center gap-2 text-white">
+                                        <i data-lucide="info" width="18" class="text-red-500"></i> Sobre o filme
+                                    </h3>
+                                    <p class="text-slate-300 leading-relaxed">
+                                        ${m.description}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recomendados -->
+                        <div class="lg:col-span-1">
+                            <h3 class="font-bold text-slate-400 mb-4 uppercase text-xs tracking-wider">Outros Títulos</h3>
+                            <div class="space-y-4">
+                                ${recommendations.length === 0 ? '<p class="text-slate-600 text-sm italic">Nenhum outro título disponível.</p>' : ''}
+                                ${recommendations.map(rm => `
+                                    <div 
+                                        onclick="actions.openPlayer('${rm.id}')"
+                                        class="flex gap-3 cursor-pointer group hover:bg-slate-800 p-2 rounded-lg transition-colors"
+                                    >
+                                        <div class="w-24 h-14 bg-slate-700 rounded overflow-hidden flex-shrink-0 relative">
+                                            <div class="absolute inset-0 flex items-center justify-center">
+                                                <i data-lucide="film" class="text-slate-500/50 w-6 h-6"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-sm text-slate-200 group-hover:text-red-500 transition-colors line-clamp-1">${rm.title}</h4>
+                                            <p class="text-xs text-slate-500 mt-1 line-clamp-2">${rm.description}</p>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- Core Render App ---
+        function renderApp() {
+            const app = document.getElementById('app');
+            
+            // 1. Render Navbar
+            let html = renderNavbar();
+
+            // 2. Render Modal (if active)
+            html += renderAuthModal();
+
+            // 3. Render Main View
+            if (!isFirebaseConfigured && !state.user && false) {
+                 // Loading state if needed
+                 html += '<div class="h-screen flex items-center justify-center">Carregando...</div>';
+            } else {
+                if (state.view === 'catalog') html += renderCatalog();
+                else if (state.view === 'admin' && state.isAdmin) html += renderAdmin();
+                else if (state.view === 'player') html += renderPlayer();
+                else html += renderCatalog(); // Fallback
             }
 
-            adminClickCount++;
-            lastClickTime = now;
-
-            if (adminClickCount >= ADMIN_CLICK_THRESHOLD && !isAdmin) {
-                btnViewAdmin.classList.remove('hidden');
-                showCustomAlert('Acesso Desbloqueado', 'Botão de Admin Login ativado!', true);
-                adminClickCount = 0; // Reseta após a ativação
+            app.innerHTML = html;
+            
+            // 3. Initialize Icons
+            if (window.lucide) {
+                window.lucide.createIcons();
             }
-        });
+        }
 
-        // Inicia o processo de autenticação
-        authenticateAndInitialize();
+        // --- Start ---
+        initFirebase();
 
     </script>
 </body>
