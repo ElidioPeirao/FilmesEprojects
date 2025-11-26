@@ -64,15 +64,19 @@
 
     <!-- Container Principal da Aplicação -->
     <div id="app" class="flex-grow">
-        <div class="h-screen w-full flex items-center justify-center text-slate-500">
-            Carregando Sistema CineCorp...
-        </div>
+        <!-- Conteúdo será injetado pelo JavaScript -->
     </div>
 
     <!-- Firebase e Lógica da Aplicação -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+        import { 
+            getAuth, 
+            signInAnonymously, 
+            onAuthStateChanged, 
+            signInWithEmailAndPassword, 
+            signOut 
+        } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, updateDoc, doc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
         // --- Configuração Global ---
@@ -98,10 +102,12 @@
         // --- Estado da Aplicação ---
         const state = {
             user: null,
+            isAuthReady: false, // Novo estado para saber se o Firebase terminou de checar a autenticação
             isAdmin: false,
             // Modais e UI
             showAuthModal: false, 
             authError: '',
+            loginError: '', // Erro específico para a tela de login
             modalConfirm: { show: false, title: '', message: '', onConfirm: null }, 
             toast: { show: false, message: '', type: 'info' },
             
@@ -134,17 +140,15 @@
             auth = getAuth(app);
             db = getFirestore(app);
 
+            // Listener que roda quando o estado de autenticação muda
             onAuthStateChanged(auth, (u) => {
                 state.user = u;
+                state.isAuthReady = true; // Marca que a checagem inicial terminou
                 if (u) subscribeToMovies();
                 renderApp();
             });
 
-            try {
-                await signInAnonymously(auth);
-            } catch (error) {
-                console.error("Auth error:", error);
-            }
+            // Não tentamos mais signInAnonymously; o usuário deve fazer login.
         }
 
         function subscribeToMovies() {
@@ -250,7 +254,40 @@
         window.actions = {
             setView: (view) => { state.view = view; renderApp(); },
             
-            // Auth Modal
+            // --- Ações de Login/Auth ---
+            
+            userLogin: async (email, password) => {
+                state.loginError = '';
+                if (!email || !password) {
+                    state.loginError = "Preencha e-mail e senha.";
+                    renderApp();
+                    return;
+                }
+                
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                    showToast("Login bem-sucedido!", "success");
+                    // onAuthStateChanged irá atualizar state.user e renderApp()
+                } catch (error) {
+                    let message = "Erro de login. Verifique e-mail e senha.";
+                    if (error.code === 'auth/user-not-found') message = "Usuário não encontrado.";
+                    else if (error.code === 'auth/wrong-password') message = "Senha incorreta.";
+                    
+                    state.loginError = message;
+                    console.error("Login Firebase Error:", error);
+                    renderApp();
+                }
+            },
+
+            userLogout: async () => {
+                await signOut(auth);
+                state.isAdmin = false; // Garante que o modo admin seja desativado ao sair
+                state.view = 'catalog';
+                showToast("Sessão encerrada.", "info");
+                // onAuthStateChanged irá atualizar state.user para null e renderApp()
+            },
+
+            // Auth Modal (Admin)
             openAuthModal: () => {
                 if (state.isAdmin) {
                     state.isAdmin = false;
@@ -507,6 +544,9 @@
         }
 
         function renderNavbar() {
+            // Se o usuário não estiver logado, não renderiza a navbar (a tela de login cuidará disso)
+            if (!state.user) return '';
+
             return `
                 <nav class="fixed top-0 w-full z-50 bg-slate-900/95 backdrop-blur border-b border-slate-800 px-6 py-4 flex items-center justify-between">
                     <div class="flex items-center gap-2 cursor-pointer" onclick="actions.setView('catalog')">
@@ -514,17 +554,26 @@
                         <h1 class="text-2xl font-bold tracking-tighter text-white">CINE<span class="text-blue-600">CORP</span></h1>
                     </div>
                     <div class="flex items-center gap-4">
+                        <span class="text-sm text-slate-400 hidden sm:inline">Bem-vindo(a), ${state.user.email || state.user.uid.substring(0, 8)}</span>
+                        
                         <button onclick="actions.openAuthModal()" class="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${state.isAdmin ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}">
                             <i data-lucide="${state.isAdmin ? 'shield-check' : 'user'}" width="14"></i>
                             ${state.isAdmin ? 'SAIR DO ADMIN' : 'MODO USUÁRIO'}
                         </button>
                         ${state.isAdmin ? `<button onclick="actions.setView('admin')" class="bg-white text-black hover:bg-slate-200 px-4 py-2 rounded font-semibold text-sm transition-colors flex items-center gap-2"><i data-lucide="plus" width="18"></i> Adicionar Filme</button>` : ''}
+
+                        <button onclick="actions.userLogout()" class="text-slate-400 hover:text-white transition-colors p-2 rounded-full">
+                           <i data-lucide="log-out" width="20"></i>
+                        </button>
                     </div>
                 </nav>
             `;
         }
 
         function renderCatalog() {
+            // Redireciona para login se não estiver autenticado
+            if (!state.user) return renderLogin(); 
+
             const filtered = state.movies.filter(m => 
                 m.title.toLowerCase().includes(state.searchTerm.toLowerCase()) ||
                 m.genre.toLowerCase().includes(state.searchTerm.toLowerCase())
@@ -579,6 +628,9 @@
         }
 
         function renderAdmin() {
+            if (!state.user) return renderLogin();
+            if (!state.isAdmin) return renderCatalog();
+
             return `
                 <div class="pt-24 pb-12 px-6 max-w-7xl mx-auto min-h-screen animate-fade-in admin-form-container">
                     <div class="max-w-2xl mx-auto">
@@ -672,6 +724,8 @@
         }
 
         function renderPlayer() {
+            if (!state.user) return renderLogin();
+
             const m = state.selectedMovie;
             if (!m) return renderCatalog();
             return `
@@ -716,17 +770,88 @@
             `;
         }
 
+        function renderLogin() {
+            // Usa o isAuthReady para evitar que a tela pisque antes do Firebase terminar de checar
+            if (!state.isAuthReady) {
+                return `
+                    <div class="h-screen w-full flex items-center justify-center text-slate-400">
+                        <span class="animate-spin inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mr-3"></span>
+                        Aguardando autenticação do Firebase...
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="min-h-screen flex items-center justify-center bg-slate-900 animate-fade-in">
+                    <div class="bg-slate-800 p-8 rounded-xl border border-slate-700 shadow-2xl w-full max-w-sm">
+                        <div class="text-center mb-8">
+                            <div class="flex items-center gap-2 justify-center mb-3">
+                                <i data-lucide="monitor-play" class="text-blue-600 w-8 h-8"></i>
+                                <h1 class="text-2xl font-bold tracking-tighter text-white">CINE<span class="text-blue-600">CORP</span></h1>
+                            </div>
+                            <p class="text-slate-400">Acesse o catálogo corporativo.</p>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <input 
+                                id="login-email" 
+                                type="email" 
+                                placeholder="E-mail" 
+                                class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-3 focus:border-blue-600 outline-none" 
+                            />
+                            <input 
+                                id="login-password" 
+                                type="password" 
+                                placeholder="Senha" 
+                                class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-3 focus:border-blue-600 outline-none" 
+                                onkeydown="if(event.key === 'Enter') actions.userLogin(document.getElementById('login-email').value, this.value)"
+                            />
+                        </div>
+
+                        ${state.loginError ? `<p class="text-red-500 text-sm mt-4 text-center">${state.loginError}</p>` : ''}
+
+                        <button 
+                            onclick="actions.userLogin(document.getElementById('login-email').value, document.getElementById('login-password').value)" 
+                            class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-colors mt-6"
+                        >
+                            ENTRAR
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
         function renderApp() {
             const app = document.getElementById('app');
+            
+            // Lógica de roteamento: se não estiver pronto, mostra carregando. Se não houver usuário, mostra login. Senão, renderiza o resto.
+            if (!state.isAuthReady) {
+                app.innerHTML = `
+                    <div class="h-screen w-full flex items-center justify-center text-slate-400">
+                        <span class="animate-spin inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mr-3"></span>
+                        Iniciando CineCorp...
+                    </div>
+                `;
+                if (window.lucide) window.lucide.createIcons();
+                return;
+            }
+
             let html = renderNavbar();
             html += renderAuthModal();
             html += renderConfirmModal();
             html += renderToast();
             
-            if (state.view === 'catalog') html += renderCatalog();
-            else if (state.view === 'admin' && state.isAdmin) html += renderAdmin();
-            else if (state.view === 'player') html += renderPlayer();
-            else html += renderCatalog();
+            if (!state.user) {
+                html += renderLogin();
+            } else if (state.view === 'catalog') {
+                html += renderCatalog();
+            } else if (state.view === 'admin' && state.isAdmin) {
+                html += renderAdmin();
+            } else if (state.view === 'player') {
+                html += renderPlayer();
+            } else {
+                html += renderCatalog();
+            }
 
             app.innerHTML = html;
             if (window.lucide) window.lucide.createIcons();
