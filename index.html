@@ -88,7 +88,8 @@
         
         const appId = 'cine-corp-production-v1';
         const ADMIN_PASSWORD = "admin123";
-        const apiKey = ""; // API Key será injetada em runtime
+        // A API Key é deixada como string vazia para ser injetada pelo ambiente
+        const apiKey = ""; 
         
         let db, auth, user;
         const isFirebaseConfigured = true;
@@ -173,12 +174,15 @@
         }
 
         async function fetchGemini(title) {
-            const systemPrompt = `Você é um assistente de catálogo de filmes. Dado o título, gere JSON: genre, rating, duration, description (pt-BR) e visualPrompt (en).`;
+            // INSTRUÇÃO FORTALECIDA: Exigir que a IA preencha todos os campos.
+            const systemPrompt = `Você é um assistente de catálogo de filmes corporativos. Dada a consulta, você DEVE retornar um objeto JSON COMPLETO, preenchendo todos os campos. Invente uma duração e uma descrição detalhada se o filme for desconhecido. Os campos são: genre, rating, duration (formato '1h 30min'), description (em Português), e visualPrompt (em Inglês).`;
             const userPrompt = `Filme: "${title}"`;
+            
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
             
             try {
                 const response = await fetch(
-                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
+                    apiUrl,
                     {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -201,11 +205,31 @@
                         }),
                     }
                 );
-                if (!response.ok) throw new Error("API Error");
+                
+                if (!response.ok) {
+                    // Tenta ler o corpo da resposta para logs mais detalhados, se possível
+                    const errorText = await response.text();
+                    console.error("Erro da API Gemini (Detalhes):", errorText);
+                    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+                }
+
                 const result = await response.json();
-                return JSON.parse(result.candidates[0].content.parts[0].text);
+                
+                if (!result.candidates || !result.candidates[0] || !result.candidates[0].content) {
+                    throw new Error("Formato de resposta inválido da API");
+                }
+
+                let text = result.candidates[0].content.parts[0].text;
+                
+                // Limpeza: Remove blocos de código Markdown se a IA os incluir
+                text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+                const parsedData = JSON.parse(text);
+
+                return parsedData;
+
             } catch (e) {
-                console.error(e);
+                console.error("Detalhes do erro Gemini:", e);
                 throw e;
             }
         }
@@ -318,15 +342,17 @@
 
                 try {
                     const data = await fetchGemini(state.form.title);
-                    state.form.genre = data.genre || "";
-                    state.form.rating = data.rating || "";
-                    state.form.duration = data.duration || "";
-                    state.form.desc = data.description || "";
+                    // Garante que campos críticos tenham um fallback mesmo que o JSON esteja incompleto
+                    state.form.genre = data.genre || "Geral";
+                    state.form.rating = data.rating || "Livre";
+                    state.form.duration = data.duration || "1h 0min"; // Fallback mais útil
+                    state.form.desc = data.description || "Descrição não gerada pela IA. Por favor, adicione manualmente.";
                     
                     const prompt = encodeURIComponent(data.visualPrompt || `Movie poster ${state.form.title}`);
                     state.form.thumbnailUrl = `https://image.pollinations.ai/prompt/${prompt}?width=800&height=450&nologo=true&seed=${Math.random()}`;
                 } catch(e) {
-                    showToast("Erro na IA", "error");
+                    console.error(e);
+                    showToast("Erro na IA: Verifique o console", "error");
                 } finally {
                     state.form.isGenerating = false;
                     renderApp();
