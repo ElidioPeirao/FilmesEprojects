@@ -60,7 +60,7 @@
         }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 font-sans selection:bg-red-600 selection:text-white min-h-screen flex flex-col">
+<body class="bg-slate-900 text-slate-100 font-sans selection:bg-blue-600 selection:text-white min-h-screen flex flex-col">
 
     <!-- Container Principal da Aplicação -->
     <div id="app" class="flex-grow">
@@ -480,7 +480,7 @@
                         <p class="text-slate-400 mb-6">${state.modalConfirm.message}</p>
                         <div class="flex justify-end gap-3">
                             <button onclick="actions.closeConfirm()" class="px-4 py-2 text-slate-400 hover:text-white transition-colors">Cancelar</button>
-                            <button onclick="actions.confirmAction()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-bold transition-colors">Confirmar</button>
+                            <button onclick="actions.confirmAction()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold transition-colors">Confirmar</button>
                         </div>
                     </div>
                 </div>
@@ -494,11 +494,11 @@
                     <div class="bg-slate-800 p-8 rounded-xl border border-slate-700 shadow-2xl max-w-sm w-full relative">
                         <button onclick="actions.closeAuthModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i data-lucide="x" width="20"></i></button>
                         <div class="text-center mb-6">
-                            <div class="bg-red-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3"><i data-lucide="lock" class="text-white" width="20"></i></div>
+                            <div class="bg-blue-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3"><i data-lucide="lock" class="text-white" width="20"></i></div>
                             <h3 class="text-xl font-bold text-white">Acesso Restrito</h3>
-                            <p class="text-slate-400 text-sm mt-1">Senha: alguma ai</p>
+                            <p class="text-slate-400 text-sm mt-1">Senha: admin123</p>
                         </div>
-                        <input id="pass-input" type="password" placeholder="Senha" class="w-full bg-slate-900 border ${state.authError ? 'border-red-500' : 'border-slate-700'} text-white rounded-lg px-4 py-3 mb-2 focus:border-red-600 outline-none" onkeydown="if(event.key === 'Enter') actions.attemptLogin(this.value)" />
+                        <input id="pass-input" type="password" placeholder="Senha" class="w-full bg-slate-900 border ${state.authError ? 'border-red-500' : 'border-slate-700'} text-white rounded-lg px-4 py-3 mb-2 focus:border-blue-600 outline-none" onkeydown="if(event.key === 'Enter') actions.attemptLogin(this.value)" />
                         ${state.authError ? `<p class="text-red-500 text-xs mb-3 text-center">${state.authError}</p>` : ''}
                         <button onclick="actions.attemptLogin(document.getElementById('pass-input').value)" class="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-slate-200 mt-2">Entrar</button>
                     </div>
@@ -510,11 +510,11 @@
             return `
                 <nav class="fixed top-0 w-full z-50 bg-slate-900/95 backdrop-blur border-b border-slate-800 px-6 py-4 flex items-center justify-between">
                     <div class="flex items-center gap-2 cursor-pointer" onclick="actions.setView('catalog')">
-                        <i data-lucide="monitor-play" class="text-red-600 w-8 h-8"></i>
-                        <h1 class="text-2xl font-bold tracking-tighter text-white">CINE<span class="text-red-600">CORP</span></h1>
+                        <i data-lucide="monitor-play" class="text-blue-600 w-8 h-8"></i>
+                        <h1 class="text-2xl font-bold tracking-tighter text-white">CINE<span class="text-blue-600">CORP</span></h1>
                     </div>
                     <div class="flex items-center gap-4">
-                        <button onclick="actions.openAuthModal()" class="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${state.isAdmin ? 'bg-red-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}">
+                        <button onclick="actions.openAuthModal()" class="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${state.isAdmin ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}">
                             <i data-lucide="${state.isAdmin ? 'shield-check' : 'user'}" width="14"></i>
                             ${state.isAdmin ? 'SAIR DO ADMIN' : 'MODO USUÁRIO'}
                         </button>
@@ -539,7 +539,7 @@
                         </div>
                         <div class="relative w-full md:w-96">
                             <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5"></i>
-                            <input type="text" placeholder="Buscar..." class="w-full bg-slate-800 border border-slate-700 text-white focus:border-red-600 rounded-full py-2.5 pl-10 pr-4 outline-none transition-all text-sm" value="${state.searchTerm}" oninput="actions.updateSearch(this.value)" />
+                            <input type="text" placeholder="Buscar..." class="w-full bg-slate-800 border border-slate-700 text-white focus:border-blue-600 rounded-full py-2.5 pl-10 pr-4 outline-none transition-all text-sm" value="${state.searchTerm}" oninput="actions.updateSearch(this.value)" />
                         </div>
                     </div>
 
@@ -551,16 +551,16 @@
                     ` : `
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             ${filtered.map(m => `
-                                <div onclick="actions.openPlayer('${m.id}')" class="group bg-slate-800 rounded-lg overflow-hidden hover:scale-[1.02] transition-transform duration-300 cursor-pointer shadow-lg border border-slate-700 hover:border-red-600/50">
+                                <div onclick="actions.openPlayer('${m.id}')" class="group bg-slate-800 rounded-lg overflow-hidden hover:scale-[1.02] transition-transform duration-300 cursor-pointer shadow-lg border border-slate-700 hover:border-blue-600/50">
                                     <div class="aspect-video bg-slate-900 relative overflow-hidden">
                                         <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10"></div>
                                         <img src="${m.thumbnailUrl || 'https://source.unsplash.com/random/800x600/?cinema'}" class="w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity"/>
                                         <div class="absolute bottom-3 left-3 z-20">
-                                            <span class="text-xs font-bold bg-red-600 text-white px-2 py-0.5 rounded uppercase tracking-wider mb-1 inline-block">${m.genre}</span>
+                                            <span class="text-xs font-bold bg-blue-600 text-white px-2 py-0.5 rounded uppercase tracking-wider mb-1 inline-block">${m.genre}</span>
                                             <h3 class="font-bold text-lg leading-tight text-white mt-1">${m.title}</h3>
                                         </div>
                                         <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-30 bg-black/40 backdrop-blur-[1px]">
-                                             <div class="bg-red-600 text-white rounded-full p-3 shadow-xl transform scale-75 group-hover:scale-100 transition-transform"><i data-lucide="play" fill="currentColor" class="ml-1"></i></div>
+                                             <div class="bg-blue-600 text-white rounded-full p-3 shadow-xl transform scale-75 group-hover:scale-100 transition-transform"><i data-lucide="play" fill="currentColor" class="ml-1"></i></div>
                                         </div>
                                     </div>
                                     <div class="p-4">
@@ -585,10 +585,10 @@
                         <button onclick="actions.setView('catalog')" class="mb-6 text-sm text-slate-400 hover:text-white flex items-center gap-1">&larr; Voltar</button>
                         
                         <div class="bg-slate-800 rounded-xl p-8 border border-slate-700 shadow-2xl mb-12 relative overflow-hidden">
-                            ${(state.form.isGenerating || state.form.isSaving) ? `<div class="absolute top-0 left-0 right-0 h-1 bg-slate-700 progress-bar"><div class="h-full bg-purple-500 w-full"></div></div>` : ''}
+                            ${(state.form.isGenerating || state.form.isSaving) ? `<div class="absolute top-0 left-0 right-0 h-1 bg-slate-700 progress-bar"><div class="h-full bg-blue-500 w-full"></div></div>` : ''}
                             
                             <div class="flex items-center gap-3 mb-6 border-b border-slate-700 pb-4">
-                                <div class="bg-red-600 p-2 rounded-lg"><i data-lucide="wand-2" class="text-white"></i></div>
+                                <div class="bg-blue-600 p-2 rounded-lg"><i data-lucide="wand-2" class="text-white"></i></div>
                                 <div>
                                     <h2 class="text-2xl font-bold text-white">${state.editingId ? 'Editar Filme' : 'Novo Filme'}</h2>
                                     <p class="text-slate-400 text-sm">${state.editingId ? 'Atualize os dados abaixo.' : 'IA preenche os detalhes.'}</p>
@@ -599,39 +599,39 @@
                                 <div>
                                     <label class="block text-sm font-medium text-slate-300 mb-2">Título</label>
                                     <div class="flex gap-2">
-                                        <input class="flex-1 bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-3 focus:border-red-600 outline-none" placeholder="Ex: Treinamento Vendas" value="${state.form.title}" oninput="actions.updateForm('title', this.value)" />
-                                        <button onclick="actions.generateAI()" class="bg-purple-600 hover:bg-purple-500 text-white px-4 rounded-lg font-medium transition-colors flex items-center gap-2 whitespace-nowrap">
+                                        <input class="flex-1 bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-3 focus:border-blue-600 outline-none" placeholder="Ex: Treinamento Vendas" value="${state.form.title}" oninput="actions.updateForm('title', this.value)" />
+                                        <button onclick="actions.generateAI()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 rounded-lg font-medium transition-colors flex items-center gap-2 whitespace-nowrap">
                                             ${state.form.isGenerating ? '<span class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>' : '<i data-lucide="wand-2" width="18"></i> IA'}
                                         </button>
                                     </div>
                                 </div>
 
                                 <div class="grid grid-cols-2 gap-4">
-                                    <div><label class="block text-sm font-medium text-slate-300 mb-2">Gênero</label><input class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-2 focus:border-red-600 outline-none" value="${state.form.genre}" oninput="actions.updateForm('genre', this.value)" /></div>
-                                    <div><label class="block text-sm font-medium text-slate-300 mb-2">Classificação</label><input class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-2 focus:border-red-600 outline-none" value="${state.form.rating}" oninput="actions.updateForm('rating', this.value)" /></div>
+                                    <div><label class="block text-sm font-medium text-slate-300 mb-2">Gênero</label><input class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-2 focus:border-blue-600 outline-none" value="${state.form.genre}" oninput="actions.updateForm('genre', this.value)" /></div>
+                                    <div><label class="block text-sm font-medium text-slate-300 mb-2">Classificação</label><input class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-2 focus:border-blue-600 outline-none" value="${state.form.rating}" oninput="actions.updateForm('rating', this.value)" /></div>
                                 </div>
 
-                                <div><label class="block text-sm font-medium text-slate-300 mb-2">Duração</label><input class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-2 focus:border-red-600 outline-none" value="${state.form.duration}" oninput="actions.updateForm('duration', this.value)" /></div>
+                                <div><label class="block text-sm font-medium text-slate-300 mb-2">Duração</label><input class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-2 focus:border-blue-600 outline-none" value="${state.form.duration}" oninput="actions.updateForm('duration', this.value)" /></div>
                                 
-                                <div><label class="block text-sm font-medium text-slate-300 mb-2">Sinopse</label><textarea class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-2 focus:border-red-600 outline-none h-24 resize-none" oninput="actions.updateForm('desc', this.value)">${state.form.desc}</textarea></div>
+                                <div><label class="block text-sm font-medium text-slate-300 mb-2">Sinopse</label><textarea class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-2 focus:border-blue-600 outline-none h-24 resize-none" oninput="actions.updateForm('desc', this.value)">${state.form.desc}</textarea></div>
 
                                 <div>
                                     <label class="block text-sm font-medium text-slate-300 mb-2">Capa (URL ou IA)</label>
                                     <div class="flex gap-4 items-start">
-                                        <div class="flex-1"><input class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-2 focus:border-red-600 outline-none text-xs text-blue-300" value="${state.form.thumbnailUrl}" oninput="actions.updateForm('thumbnailUrl', this.value)" placeholder="URL da imagem..." /></div>
+                                        <div class="flex-1"><input class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-2 focus:border-blue-600 outline-none text-xs text-blue-300" value="${state.form.thumbnailUrl}" oninput="actions.updateForm('thumbnailUrl', this.value)" placeholder="URL da imagem..." /></div>
                                         ${state.form.thumbnailUrl ? `<div class="w-24 h-14 bg-slate-700 rounded overflow-hidden border border-slate-600 flex-shrink-0"><img src="${state.form.thumbnailUrl}" class="w-full h-full object-cover" /></div>` : ''}
                                     </div>
                                 </div>
 
                                 <div>
                                     <label class="block text-sm font-medium text-slate-300 mb-2">Link Drive (Vídeo)</label>
-                                    <input class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-3 focus:border-red-600 outline-none font-mono text-sm text-blue-400" placeholder="https://drive.google.com/file/d/..." value="${state.form.url}" oninput="actions.updateForm('url', this.value)" />
+                                    <input class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-3 focus:border-blue-600 outline-none font-mono text-sm text-blue-400" placeholder="https://drive.google.com/file/d/..." value="${state.form.url}" oninput="actions.updateForm('url', this.value)" />
                                 </div>
 
                                 <div class="pt-4 border-t border-slate-700 flex justify-end gap-3">
                                     ${state.editingId ? `<button onclick="actions.cancelEdit()" class="text-slate-400 hover:text-white px-4 py-3 rounded-lg font-medium transition-colors">Cancelar</button>` : ''}
                                     
-                                    <button onclick="actions.saveMovie()" ${state.form.isSaving ? 'disabled' : ''} class="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-bold transition-all shadow-lg flex items-center gap-2">
+                                    <button onclick="actions.saveMovie()" ${state.form.isSaving ? 'disabled' : ''} class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-bold transition-all shadow-lg flex items-center gap-2">
                                         ${state.form.isSaving ? 'Salvando...' : (state.editingId ? 'Atualizar Filme' : 'Salvar Filme')}
                                     </button>
                                 </div>
@@ -642,7 +642,7 @@
                         <div class="bg-slate-800 rounded-lg border border-slate-700 divide-y divide-slate-700">
                             ${state.movies.map(m => `
                                 <div class="p-4 flex justify-between items-center hover:bg-slate-700/50 relative overflow-hidden">
-                                    ${state.generatingImages[m.id] ? `<div class="absolute bottom-0 left-0 right-0 h-1 bg-purple-900/50 progress-bar"><div class="h-full bg-purple-500 w-full"></div></div>` : ''}
+                                    ${state.generatingImages[m.id] ? `<div class="absolute bottom-0 left-0 right-0 h-1 bg-blue-900/50 progress-bar"><div class="h-full bg-blue-500 w-full"></div></div>` : ''}
                                     
                                     <div class="flex gap-4 items-center">
                                         ${m.thumbnailUrl ? `<img src="${m.thumbnailUrl}" class="w-16 h-10 object-cover rounded border border-slate-600" />` : `<div class="w-16 h-10 bg-slate-700 rounded flex items-center justify-center"><i data-lucide="film" width="16"></i></div>`}
@@ -656,8 +656,8 @@
                                             <i data-lucide="pencil" width="18"></i>
                                         </button>
                                         
-                                        <button onclick="actions.regenerateImage('${m.id}')" class="text-purple-400 hover:text-purple-300 hover:bg-purple-900/20 p-2 rounded transition-colors" title="Regenerar Capa IA" ${state.generatingImages[m.id] ? 'disabled' : ''}>
-                                            ${state.generatingImages[m.id] ? '<span class="animate-spin block w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full"></span>' : '<i data-lucide="image-plus" width="18"></i>'}
+                                        <button onclick="actions.regenerateImage('${m.id}')" class="text-blue-400 hover:text-blue-300 hover:bg-blue-900/20 p-2 rounded transition-colors" title="Regenerar Capa IA" ${state.generatingImages[m.id] ? 'disabled' : ''}>
+                                            ${state.generatingImages[m.id] ? '<span class="animate-spin block w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full"></span>' : '<i data-lucide="image-plus" width="18"></i>'}
                                         </button>
                                         <button onclick="actions.deleteMovie('${m.id}')" class="text-red-500 hover:text-red-400 hover:bg-red-900/20 p-2 rounded transition-colors" title="Excluir">
                                             <i data-lucide="trash-2" width="18"></i>
@@ -690,7 +690,7 @@
                                     <span class="text-slate-400">${m.genre}</span>
                                 </div>
                                 <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700">
-                                    <h3 class="text-lg font-bold mb-2 flex items-center gap-2 text-white"><i data-lucide="info" width="18" class="text-red-500"></i> Sobre</h3>
+                                    <h3 class="text-lg font-bold mb-2 flex items-center gap-2 text-white"><i data-lucide="info" width="18" class="text-blue-500"></i> Sobre</h3>
                                     <p class="text-slate-300 leading-relaxed">${m.description}</p>
                                 </div>
                             </div>
@@ -704,7 +704,7 @@
                                             <img src="${rm.thumbnailUrl || 'https://source.unsplash.com/random/800x600/?cinema'}" class="w-full h-full object-cover opacity-60" />
                                         </div>
                                         <div>
-                                            <h4 class="font-bold text-sm text-slate-200 group-hover:text-red-500 transition-colors line-clamp-1">${rm.title}</h4>
+                                            <h4 class="font-bold text-sm text-slate-200 group-hover:text-blue-500 transition-colors line-clamp-1">${rm.title}</h4>
                                             <p class="text-xs text-slate-500 mt-1 line-clamp-2">${rm.description}</p>
                                         </div>
                                     </div>
