@@ -100,14 +100,18 @@
             // Modais e UI
             showAuthModal: false, 
             authError: '',
-            modalConfirm: { show: false, title: '', message: '', onConfirm: null }, // Modal Genérico de Confirmação
-            toast: { show: false, message: '', type: 'info' }, // Notificações (Toast)
+            modalConfirm: { show: false, title: '', message: '', onConfirm: null }, 
+            toast: { show: false, message: '', type: 'info' },
             
             movies: [],
             view: 'catalog',
             selectedMovie: null,
             searchTerm: '',
-            generatingImages: {}, // ID -> booleano
+            generatingImages: {}, 
+            
+            // Estado de Edição
+            editingId: null, // ID do filme sendo editado (null se for novo)
+
             form: {
                 title: '',
                 genre: '',
@@ -253,7 +257,6 @@
                 state.modalConfirm = { show: false, title: '', message: '', onConfirm: null };
                 renderApp();
             },
-            // AÇÃO CORRIGIDA: Função pública para executar a confirmação
             confirmAction: async () => {
                 if (state.modalConfirm.onConfirm) {
                     await state.modalConfirm.onConfirm();
@@ -276,6 +279,37 @@
             updateForm: (f, v) => state.form[f] = v,
             updateSearch: (v) => { state.searchTerm = v; renderApp(); },
             openPlayer: (id) => { state.selectedMovie = state.movies.find(m=>m.id===id); state.view='player'; renderApp(); },
+
+            // --- Ações de Edição ---
+            editMovie: (id) => {
+                const m = state.movies.find(x => x.id === id);
+                if (!m) return;
+                
+                // Popula o formulário com os dados do filme
+                state.form = {
+                    title: m.title,
+                    genre: m.genre,
+                    rating: m.rating,
+                    duration: m.duration,
+                    desc: m.description,
+                    url: m.videoUrl, // URL original para edição
+                    thumbnailUrl: m.thumbnailUrl,
+                    isGenerating: false,
+                    isSaving: false
+                };
+                state.editingId = id; // Marca que estamos editando
+                
+                // Rola para o topo (formulário)
+                document.querySelector('.admin-form-container')?.scrollIntoView({ behavior: 'smooth' });
+                renderApp();
+            },
+            
+            cancelEdit: () => {
+                // Limpa o form e o ID de edição
+                state.form = { title:'', genre:'', rating:'', duration:'', desc:'', url:'', thumbnailUrl:'', isGenerating:false, isSaving:false };
+                state.editingId = null;
+                renderApp();
+            },
 
             generateAI: async () => {
                 if (!state.form.title) return showToast("Digite um título", "error");
@@ -303,19 +337,16 @@
                 const m = state.movies.find(x => x.id === id);
                 if(!m) return;
 
-                // Usando o modal customizado em vez de confirm()
                 window.actions.triggerConfirm(
                     "Regenerar Capa",
                     `Deseja criar uma nova imagem para "${m.title}"?`,
                     async () => {
                         state.generatingImages = { ...state.generatingImages, [id]: true };
-                        renderApp(); // Renderiza para mostrar a barra de progresso no card
+                        renderApp(); 
 
                         try {
                             const prompt = encodeURIComponent(`Movie poster for ${m.title}, ${m.genre}, cinematic, 8k`);
                             const newUrl = `https://image.pollinations.ai/prompt/${prompt}?width=800&height=450&nologo=true&seed=${Math.floor(Math.random()*1000)}`;
-                            
-                            // Pequeno delay artificial para ver a barra de progresso (a API é muito rápida as vezes)
                             await new Promise(r => setTimeout(r, 1000)); 
 
                             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'movies', id), {
@@ -342,7 +373,7 @@
                     const embedUrl = getDriveEmbedLink(state.form.url);
                     const thumb = state.form.thumbnailUrl || `https://source.unsplash.com/800x450/?cinema`;
                     
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'movies'), {
+                    const movieData = {
                         title: state.form.title,
                         genre: state.form.genre || 'Geral',
                         rating: state.form.rating || 'Livre',
@@ -351,13 +382,28 @@
                         videoUrl: state.form.url,
                         embedUrl,
                         thumbnailUrl: thumb,
-                        createdAt: serverTimestamp()
-                    });
+                    };
+
+                    if (state.editingId) {
+                        // MODO EDIÇÃO: Atualiza o doc existente
+                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'movies', state.editingId), movieData);
+                        showToast("Filme atualizado!", "success");
+                    } else {
+                        // MODO CRIAÇÃO: Cria novo doc com timestamp
+                        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'movies'), {
+                            ...movieData,
+                            createdAt: serverTimestamp()
+                        });
+                        showToast("Filme salvo!", "success");
+                    }
                     
+                    // Limpa tudo após salvar
                     state.form = { title:'', genre:'', rating:'', duration:'', desc:'', url:'', thumbnailUrl:'', isGenerating:false, isSaving:false };
-                    showToast("Filme salvo!", "success");
+                    state.editingId = null;
+                    
                 } catch(e) {
                     showToast("Erro ao salvar", "error");
+                    console.error(e);
                 } finally {
                     state.form.isSaving = false;
                     renderApp();
@@ -365,12 +411,16 @@
             },
 
             deleteMovie: (id) => {
-                // Modal customizado para deletar
                 window.actions.triggerConfirm(
                     "Excluir Filme",
                     "Tem certeza que deseja remover este filme do catálogo?",
                     async () => {
                         try {
+                            // Se estiver editando o filme que será deletado, cancela a edição
+                            if (state.editingId === id) {
+                                state.editingId = null;
+                                state.form = { title:'', genre:'', rating:'', duration:'', desc:'', url:'', thumbnailUrl:'', isGenerating:false, isSaving:false };
+                            }
                             await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'movies', id));
                             showToast("Filme removido", "success");
                         } catch(e) {
@@ -403,7 +453,6 @@
                         <p class="text-slate-400 mb-6">${state.modalConfirm.message}</p>
                         <div class="flex justify-end gap-3">
                             <button onclick="actions.closeConfirm()" class="px-4 py-2 text-slate-400 hover:text-white transition-colors">Cancelar</button>
-                            <!-- CORREÇÃO AQUI: Usando actions.confirmAction() -->
                             <button onclick="actions.confirmAction()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-bold transition-colors">Confirmar</button>
                         </div>
                     </div>
@@ -504,7 +553,7 @@
 
         function renderAdmin() {
             return `
-                <div class="pt-24 pb-12 px-6 max-w-7xl mx-auto min-h-screen animate-fade-in">
+                <div class="pt-24 pb-12 px-6 max-w-7xl mx-auto min-h-screen animate-fade-in admin-form-container">
                     <div class="max-w-2xl mx-auto">
                         <button onclick="actions.setView('catalog')" class="mb-6 text-sm text-slate-400 hover:text-white flex items-center gap-1">&larr; Voltar</button>
                         
@@ -513,7 +562,10 @@
                             
                             <div class="flex items-center gap-3 mb-6 border-b border-slate-700 pb-4">
                                 <div class="bg-red-600 p-2 rounded-lg"><i data-lucide="wand-2" class="text-white"></i></div>
-                                <div><h2 class="text-2xl font-bold text-white">Novo Filme</h2><p class="text-slate-400 text-sm">IA preenche os detalhes.</p></div>
+                                <div>
+                                    <h2 class="text-2xl font-bold text-white">${state.editingId ? 'Editar Filme' : 'Novo Filme'}</h2>
+                                    <p class="text-slate-400 text-sm">${state.editingId ? 'Atualize os dados abaixo.' : 'IA preenche os detalhes.'}</p>
+                                </div>
                             </div>
 
                             <div class="space-y-6">
@@ -549,9 +601,11 @@
                                     <input class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-3 focus:border-red-600 outline-none font-mono text-sm text-blue-400" placeholder="https://drive.google.com/file/d/..." value="${state.form.url}" oninput="actions.updateForm('url', this.value)" />
                                 </div>
 
-                                <div class="pt-4 border-t border-slate-700 flex justify-end">
+                                <div class="pt-4 border-t border-slate-700 flex justify-end gap-3">
+                                    ${state.editingId ? `<button onclick="actions.cancelEdit()" class="text-slate-400 hover:text-white px-4 py-3 rounded-lg font-medium transition-colors">Cancelar</button>` : ''}
+                                    
                                     <button onclick="actions.saveMovie()" ${state.form.isSaving ? 'disabled' : ''} class="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-bold transition-all shadow-lg flex items-center gap-2">
-                                        ${state.form.isSaving ? 'Salvando...' : 'Salvar Filme'}
+                                        ${state.form.isSaving ? 'Salvando...' : (state.editingId ? 'Atualizar Filme' : 'Salvar Filme')}
                                     </button>
                                 </div>
                             </div>
@@ -571,6 +625,10 @@
                                         </div>
                                     </div>
                                     <div class="flex gap-2">
+                                        <button onclick="actions.editMovie('${m.id}')" class="text-yellow-400 hover:text-yellow-300 hover:bg-yellow-900/20 p-2 rounded transition-colors" title="Editar Filme">
+                                            <i data-lucide="pencil" width="18"></i>
+                                        </button>
+                                        
                                         <button onclick="actions.regenerateImage('${m.id}')" class="text-purple-400 hover:text-purple-300 hover:bg-purple-900/20 p-2 rounded transition-colors" title="Regenerar Capa IA" ${state.generatingImages[m.id] ? 'disabled' : ''}>
                                             ${state.generatingImages[m.id] ? '<span class="animate-spin block w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full"></span>' : '<i data-lucide="image-plus" width="18"></i>'}
                                         </button>
