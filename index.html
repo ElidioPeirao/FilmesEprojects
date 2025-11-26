@@ -88,8 +88,9 @@
         
         const appId = 'cine-corp-production-v1';
         const ADMIN_PASSWORD = "admin123";
-        // A API Key é deixada como string vazia para ser injetada pelo ambiente
-        const apiKey = ""; 
+        
+        // CHAVE DA API DO GEMINI: A chave fornecida pelo usuário foi inserida aqui.
+        const apiKey = "AIzaSyBi4vCPvQovoSVsduKlytqoDkscvQ6JGoQ"; 
         
         let db, auth, user;
         const isFirebaseConfigured = true;
@@ -178,6 +179,7 @@
             const systemPrompt = `Você é um assistente de catálogo de filmes corporativos. Dada a consulta, você DEVE retornar um objeto JSON COMPLETO, preenchendo todos os campos. Invente uma duração e uma descrição detalhada se o filme for desconhecido. Os campos são: genre, rating, duration (formato '1h 30min'), description (em Português), e visualPrompt (em Inglês).`;
             const userPrompt = `Filme: "${title}"`;
             
+            // Usando a chave fornecida na URL, necessário para ambientes que não injetam o token automaticamente.
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
             
             try {
@@ -207,9 +209,8 @@
                 );
                 
                 if (!response.ok) {
-                    // Tenta ler o corpo da resposta para logs mais detalhados, se possível
                     const errorText = await response.text();
-                    console.error("Erro da API Gemini (Detalhes):", errorText);
+                    console.error("Erro da API Gemini (Status/Corpo):", response.status, errorText);
                     throw new Error(`API Error: ${response.status} ${response.statusText}`);
                 }
 
@@ -495,7 +496,7 @@
                         <div class="text-center mb-6">
                             <div class="bg-red-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3"><i data-lucide="lock" class="text-white" width="20"></i></div>
                             <h3 class="text-xl font-bold text-white">Acesso Restrito</h3>
-                            <p class="text-slate-400 text-sm mt-1">Senha: admin123</p>
+                            <p class="text-slate-400 text-sm mt-1">Senha: alguma ai</p>
                         </div>
                         <input id="pass-input" type="password" placeholder="Senha" class="w-full bg-slate-900 border ${state.authError ? 'border-red-500' : 'border-slate-700'} text-white rounded-lg px-4 py-3 mb-2 focus:border-red-600 outline-none" onkeydown="if(event.key === 'Enter') actions.attemptLogin(this.value)" />
                         ${state.authError ? `<p class="text-red-500 text-xs mb-3 text-center">${state.authError}</p>` : ''}
