@@ -58,6 +58,10 @@
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
+        /* Ajuste de padding no corpo para compensar o rodapé fixo */
+        body {
+            padding-bottom: 5rem; /* Espaço para o rodapé */
+        }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans selection:bg-blue-600 selection:text-white min-h-screen flex flex-col">
@@ -72,12 +76,23 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
         import { 
             getAuth, 
-            signInAnonymously, 
             onAuthStateChanged, 
             signInWithEmailAndPassword, 
             signOut 
         } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, updateDoc, doc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+        import { 
+            getFirestore, 
+            collection, 
+            addDoc, 
+            onSnapshot, 
+            deleteDoc, 
+            updateDoc, 
+            doc, 
+            setDoc,
+            serverTimestamp, 
+            query, 
+            orderBy 
+        } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
         // --- Configuração Global ---
         const firebaseConfig = {
@@ -93,8 +108,9 @@
         const appId = 'cine-corp-production-v1';
         const ADMIN_PASSWORD = "admin123";
         
-        // CHAVE DA API DO GEMINI: A chave fornecida pelo usuário foi inserida aqui.
-        const apiKey = "AIzaSyBi4vCPvQovoSVsduKlytqoDkscvQ6JGoQ"; 
+        // CHAVE DA API DO GEMINI: A chave anterior foi desativada (Erro 403).
+        // Por favor, gere uma NOVA chave e insira-a aqui se estiver em ambiente local (VS Code).
+        const apiKey = ""; 
         
         let db, auth, user;
         const isFirebaseConfigured = true;
@@ -102,12 +118,14 @@
         // --- Estado da Aplicação ---
         const state = {
             user: null,
-            isAuthReady: false, // Novo estado para saber se o Firebase terminou de checar a autenticação
+            isAuthReady: false, 
             isAdmin: false,
+            // Novo estado para usuários online
+            onlineUsers: [], 
             // Modais e UI
             showAuthModal: false, 
             authError: '',
-            loginError: '', // Erro específico para a tela de login
+            loginError: '', 
             modalConfirm: { show: false, title: '', message: '', onConfirm: null }, 
             toast: { show: false, message: '', type: 'info' },
             
@@ -118,7 +136,7 @@
             generatingImages: {}, 
             
             // Estado de Edição
-            editingId: null, // ID do filme sendo editado (null se for novo)
+            editingId: null, 
 
             form: {
                 title: '',
@@ -143,12 +161,17 @@
             // Listener que roda quando o estado de autenticação muda
             onAuthStateChanged(auth, (u) => {
                 state.user = u;
-                state.isAuthReady = true; // Marca que a checagem inicial terminou
-                if (u) subscribeToMovies();
+                state.isAuthReady = true; 
+                if (u) {
+                    subscribeToMovies();
+                    subscribeToOnlineUsers();
+                } else {
+                    // Limpa usuários online e filmes se não houver autenticação
+                    state.onlineUsers = [];
+                    state.movies = [];
+                }
                 renderApp();
             });
-
-            // Não tentamos mais signInAnonymously; o usuário deve fazer login.
         }
 
         function subscribeToMovies() {
@@ -168,6 +191,20 @@
             });
         }
 
+        // NOVO: Listener para usuários online
+        function subscribeToOnlineUsers() {
+            if (!db || !state.user) return;
+            // Caminho para a coleção de presença pública
+            const onlineUsersRef = collection(db, 'artifacts', appId, 'public', 'data', 'online_users');
+            const q = query(onlineUsersRef, orderBy('lastSeen', 'desc'));
+
+            onSnapshot(q, (snapshot) => {
+                const users = snapshot.docs.map(doc => doc.data());
+                state.onlineUsers = users;
+                renderApp();
+            });
+        }
+
         // --- Helpers ---
         function showToast(message, type = 'info') {
             state.toast = { show: true, message, type };
@@ -183,7 +220,7 @@
             const systemPrompt = `Você é um assistente de catálogo de filmes corporativos. Dada a consulta, você DEVE retornar um objeto JSON COMPLETO, preenchendo todos os campos. Invente uma duração e uma descrição detalhada se o filme for desconhecido. Os campos são: genre, rating, duration (formato '1h 30min'), description (em Português), e visualPrompt (em Inglês).`;
             const userPrompt = `Filme: "${title}"`;
             
-            // Usando a chave fornecida na URL, necessário para ambientes que não injetam o token automaticamente.
+            // Usando a chave fornecida na URL.
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
             
             try {
@@ -265,13 +302,24 @@
                 }
                 
                 try {
-                    await signInWithEmailAndPassword(auth, email, password);
+                    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                    const user = userCredential.user;
+
+                    // NOVO: Registro de Presença
+                    if (user && user.email) {
+                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'online_users', user.uid), {
+                            email: user.email,
+                            lastSeen: serverTimestamp(),
+                            uid: user.uid
+                        }, { merge: true });
+                    }
+
                     showToast("Login bem-sucedido!", "success");
-                    // onAuthStateChanged irá atualizar state.user e renderApp()
                 } catch (error) {
                     let message = "Erro de login. Verifique e-mail e senha.";
                     if (error.code === 'auth/user-not-found') message = "Usuário não encontrado.";
                     else if (error.code === 'auth/wrong-password') message = "Senha incorreta.";
+                    else if (error.code === 'auth/invalid-credential') message = "Credenciais inválidas.";
                     
                     state.loginError = message;
                     console.error("Login Firebase Error:", error);
@@ -280,11 +328,15 @@
             },
 
             userLogout: async () => {
+                // NOVO: Remoção da Presença antes de sair
+                if (auth.currentUser && auth.currentUser.email) {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'online_users', auth.currentUser.uid));
+                }
+
                 await signOut(auth);
-                state.isAdmin = false; // Garante que o modo admin seja desativado ao sair
+                state.isAdmin = false; 
                 state.view = 'catalog';
                 showToast("Sessão encerrada.", "info");
-                // onAuthStateChanged irá atualizar state.user para null e renderApp()
             },
 
             // Auth Modal (Admin)
@@ -342,32 +394,29 @@
             updateSearch: (v) => { state.searchTerm = v; renderApp(); },
             openPlayer: (id) => { state.selectedMovie = state.movies.find(m=>m.id===id); state.view='player'; renderApp(); },
 
-            // --- Ações de Edição ---
+            // --- Ações de Edição/AI/CRUD ---
             editMovie: (id) => {
                 const m = state.movies.find(x => x.id === id);
                 if (!m) return;
                 
-                // Popula o formulário com os dados do filme
                 state.form = {
                     title: m.title,
                     genre: m.genre,
                     rating: m.rating,
                     duration: m.duration,
                     desc: m.description,
-                    url: m.videoUrl, // URL original para edição
+                    url: m.videoUrl, 
                     thumbnailUrl: m.thumbnailUrl,
                     isGenerating: false,
                     isSaving: false
                 };
-                state.editingId = id; // Marca que estamos editando
+                state.editingId = id; 
                 
-                // Rola para o topo (formulário)
                 document.querySelector('.admin-form-container')?.scrollIntoView({ behavior: 'smooth' });
                 renderApp();
             },
             
             cancelEdit: () => {
-                // Limpa o form e o ID de edição
                 state.form = { title:'', genre:'', rating:'', duration:'', desc:'', url:'', thumbnailUrl:'', isGenerating:false, isSaving:false };
                 state.editingId = null;
                 renderApp();
@@ -380,17 +429,16 @@
 
                 try {
                     const data = await fetchGemini(state.form.title);
-                    // Garante que campos críticos tenham um fallback mesmo que o JSON esteja incompleto
                     state.form.genre = data.genre || "Geral";
                     state.form.rating = data.rating || "Livre";
-                    state.form.duration = data.duration || "1h 0min"; // Fallback mais útil
+                    state.form.duration = data.duration || "1h 0min"; 
                     state.form.desc = data.description || "Descrição não gerada pela IA. Por favor, adicione manualmente.";
                     
                     const prompt = encodeURIComponent(data.visualPrompt || `Movie poster ${state.form.title}`);
                     state.form.thumbnailUrl = `https://image.pollinations.ai/prompt/${prompt}?width=800&height=450&nologo=true&seed=${Math.random()}`;
                 } catch(e) {
                     console.error(e);
-                    showToast("Erro na IA: Verifique o console", "error");
+                    showToast("Erro na IA: Chave Inválida. Verifique o console.", "error");
                 } finally {
                     state.form.isGenerating = false;
                     renderApp();
@@ -449,11 +497,11 @@
                     };
 
                     if (state.editingId) {
-                        // MODO EDIÇÃO: Atualiza o doc existente
+                        // MODO EDIÇÃO
                         await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'movies', state.editingId), movieData);
                         showToast("Filme atualizado!", "success");
                     } else {
-                        // MODO CRIAÇÃO: Cria novo doc com timestamp
+                        // MODO CRIAÇÃO
                         await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'movies'), {
                             ...movieData,
                             createdAt: serverTimestamp()
@@ -480,7 +528,6 @@
                     "Tem certeza que deseja remover este filme do catálogo?",
                     async () => {
                         try {
-                            // Se estiver editando o filme que será deletado, cancela a edição
                             if (state.editingId === id) {
                                 state.editingId = null;
                                 state.form = { title:'', genre:'', rating:'', duration:'', desc:'', url:'', thumbnailUrl:'', isGenerating:false, isSaving:false };
@@ -533,7 +580,7 @@
                         <div class="text-center mb-6">
                             <div class="bg-blue-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3"><i data-lucide="lock" class="text-white" width="20"></i></div>
                             <h3 class="text-xl font-bold text-white">Acesso Restrito</h3>
-                            <p class="text-slate-400 text-sm mt-1">Senha: Alguma ai</p>
+                            <p class="text-slate-400 text-sm mt-1">Senha: 123</p>
                         </div>
                         <input id="pass-input" type="password" placeholder="Senha" class="w-full bg-slate-900 border ${state.authError ? 'border-red-500' : 'border-slate-700'} text-white rounded-lg px-4 py-3 mb-2 focus:border-blue-600 outline-none" onkeydown="if(event.key === 'Enter') actions.attemptLogin(this.value)" />
                         ${state.authError ? `<p class="text-red-500 text-xs mb-3 text-center">${state.authError}</p>` : ''}
@@ -569,6 +616,36 @@
                 </nav>
             `;
         }
+        
+        // NOVO: Renderiza o Rodapé Fixo
+        function renderFooter() {
+            if (!state.user) return ''; // Só mostra se estiver logado
+
+            const onlineList = state.onlineUsers.map(u => `
+                <span class="flex items-center gap-1 text-xs text-slate-400 p-1 bg-slate-800 rounded-full hover:bg-slate-700/50 transition-colors cursor-default">
+                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span class="truncate max-w-[80px]">${u.email.split('@')[0]}</span>
+                </span>
+            `).join('');
+
+            return `
+                <footer class="fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur border-t border-slate-800 px-6 py-2 flex items-center justify-center shadow-2xl">
+                    <div class="max-w-7xl w-full flex items-center justify-between text-slate-500">
+                        <p class="text-xs">&copy; 2025 CineCorp. Todos os direitos reservados.</p>
+                        
+                        <div class="flex items-center gap-2">
+                             <h3 class="text-xs font-bold uppercase tracking-wider text-blue-400 flex items-center gap-1">
+                               <i data-lucide="users" width="14"></i> ONLINE (${state.onlineUsers.length}):
+                            </h3>
+                            <div class="flex items-center gap-1 max-w-md overflow-x-auto no-scrollbar">
+                                ${onlineList}
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            `;
+        }
+
 
         function renderCatalog() {
             // Redireciona para login se não estiver autenticado
@@ -592,13 +669,7 @@
                         </div>
                     </div>
 
-                    ${filtered.length === 0 ? `
-                        <div class="text-center py-20 text-slate-500">
-                            <i data-lucide="film" class="w-16 h-16 mx-auto mb-4 opacity-20"></i>
-                            <p>Nada encontrado.</p>
-                        </div>
-                    ` : `
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             ${filtered.map(m => `
                                 <div onclick="actions.openPlayer('${m.id}')" class="group bg-slate-800 rounded-lg overflow-hidden hover:scale-[1.02] transition-transform duration-300 cursor-pointer shadow-lg border border-slate-700 hover:border-blue-600/50">
                                     <div class="aspect-video bg-slate-900 relative overflow-hidden">
@@ -622,7 +693,7 @@
                                 </div>
                             `).join('')}
                         </div>
-                    `}
+                    </div>
                 </div>
             `;
         }
@@ -731,8 +802,9 @@
             return `
                 <div class="pt-24 pb-12 px-6 max-w-7xl mx-auto animate-fade-in">
                     <button onclick="actions.setView('catalog')" class="mb-6 text-sm text-slate-400 hover:text-white flex items-center gap-1">&larr; Voltar</button>
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <div class="lg:col-span-2 space-y-6">
+                    <div class="grid grid-cols-1 gap-8">
+                        
+                        <div class="space-y-6">
                             <div class="aspect-video bg-black rounded-xl overflow-hidden shadow-2xl relative group border border-slate-800">
                                 <iframe src="${m.embedUrl}" class="w-full h-full" frameBorder="0" allow="autoplay; fullscreen" allowFullScreen></iframe>
                             </div>
@@ -748,12 +820,11 @@
                                     <p class="text-slate-300 leading-relaxed">${m.description}</p>
                                 </div>
                             </div>
-                        </div>
-                        <div class="lg:col-span-1">
-                            <h3 class="font-bold text-slate-400 mb-4 uppercase text-xs tracking-wider">Recomendados</h3>
-                            <div class="space-y-4">
-                                ${state.movies.filter(mv => mv.id !== m.id).slice(0, 4).map(rm => `
-                                    <div onclick="actions.openPlayer('${rm.id}')" class="flex gap-3 cursor-pointer group hover:bg-slate-800 p-2 rounded-lg transition-colors">
+                            
+                            <h3 class="font-bold text-slate-400 pt-8 mb-4 uppercase text-xs tracking-wider border-t border-slate-800">Recomendados</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                ${state.movies.filter(mv => mv.id !== m.id).slice(0, 3).map(rm => `
+                                    <div onclick="actions.openPlayer('${rm.id}')" class="flex gap-3 cursor-pointer group hover:bg-slate-800 p-2 rounded-lg transition-colors items-start">
                                         <div class="w-24 h-14 bg-slate-700 rounded overflow-hidden flex-shrink-0 relative">
                                             <img src="${rm.thumbnailUrl || 'https://source.unsplash.com/random/800x600/?cinema'}" class="w-full h-full object-cover opacity-60" />
                                         </div>
@@ -763,6 +834,7 @@
                                         </div>
                                     </div>
                                 `).join('')}
+                                ${state.movies.length <= 1 ? '<p class="text-slate-600 text-sm italic col-span-full">Nenhum outro título disponível.</p>' : ''}
                             </div>
                         </div>
                     </div>
@@ -853,7 +925,12 @@
                 html += renderCatalog();
             }
 
+            // Injeta o conteúdo principal
             app.innerHTML = html;
+            
+            // Adiciona o rodapé (fora do #app)
+            document.body.insertAdjacentHTML('beforeend', renderFooter());
+
             if (window.lucide) window.lucide.createIcons();
         }
 
